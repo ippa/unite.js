@@ -23,7 +23,7 @@ Licensed under LGPL so you're free to use it for commercial projects.
 
 You can also link to invidual files in your HTML:
   <script src="/unitejs/src/core.js"></script>
-  <script src="/unitejs/src/sprite.js"></script>
+  <script src="/unitejs/src/router.js"></script>
 
 NOTE: core.js is always needed but after that you can pick and choose depending on what you need.
 A rule of thumb is that a file named "foo.js" will include a constructor named Foo().
@@ -57,3 +57,5 @@ A rule of thumb is that a file named "foo.js" will include a constructor named F
       <div loop="items">{{_human_index}} - {{this}}</div>
     </body>
   </html>
+
+Run above example here: http://ippa.se/unitejs/examples/list.html
