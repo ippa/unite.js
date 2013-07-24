@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <script>
+      app = {
+        h2: function() { return this.text; },
+        item_name: "New item",
+        checked: true,
+        text: "write something..."
+     }
+    </script>
+
+    <script src="../unite.js"></script>
+  </head>
+
+  <body scope="app">
+    <h1>Input test</h1>
+    <h2>{{h2()}}</h2>
+    <input type="text" value="{{item_name}}" /> <br>
+    <input type="checkbox" checked="{{checked}}" /> <br>
+    <textarea placeholder="{{text}}" value="{{text}}"></textarea>
+  </body>
+
+</html>

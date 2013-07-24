@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+  <head>
+    <script>
+      app = {
+        header: "Dynamic Lists",
+        people: [{name: "ippa", speciality: "javascript"}, {name: "bigge", speciality: "scala"}, {name: "harrison", speciality: "design"}],
+        items: ["Foo", "Bar", "Moo"],
+        item_name: "New item",
+        addItem: function() { this.items.push(this.item_name) },
+        delItem: function() { this.items = this.items.slice(0, -1) },
+        randomColor: function() { return (Math.random()*10 < 5) ? "red" : "blue" }
+      }
+    </script>
+
+    <script src="../unite.js"></script>
+  </head>
+
+  <body scope="app">
+    <h1 style="color: {{randomColor()}}">{{header}}</h1>
+    <input type="text" value="{{item_name}}" />
+    <button action="addItem">Add item</button>
+    <button action="delItem">Del item</button>
+    <br>
+
+    <h2>Items</h2>
+    <div loop="items">{{_human_index}} - {{this}}</div>
+
+    <h2>People</h2>
+    <div loop="people">Hi {{name}}, I hear you're good at {{speciality}}!</div>
+  </body>
+
+</html>

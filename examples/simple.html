@@ -1,0 +1,30 @@
+<html>
+  <head>
+    <script>
+      app = {
+        title: "Welcome!",
+        titles: {supertitle: "WELCOME #@!"},
+        button_text: "Click me!",
+        showMessage: function() { alert(this.title + " from function.") },
+        checkboxInfo: function(el) { console.log(el.target.checked); },
+        items: ["Playstation 4", "SNES", "Megadrive"]
+      }
+    </script>
+
+    <script src="../unite.js"></script>
+  </head>
+
+  <body scope="app">
+    <div id="test">
+      <h1>{{titles.supertitle}}</h1>
+      <button action="showMessage">{{button_text}}</button>
+      <label><input type="checkbox" action="checkboxInfo" checked="{{checked}}" /> Checkbox!</label>
+      <ul>
+        <li loop="items">{{this}}</li>
+      </ul>
+    </div>
+
+    <div loop="items">console #{{_human_index}}: {{this}}</div>
+  </body>
+
+</html>

@@ -1,0 +1,59 @@
+= Unite.js - lightweight 2-way hierarchical databinding 
+
+= Unite is pre-pre-alpha. _Evertyhing_ is in flux.
+
+Depends on JavaScript Edition 5. Works with Chrome 9+, Firefox 3.6+, Safari 5+ & IE9.
+Licensed under LGPL so you're free to use it for commercial projects.
+
+== Highlights
+* Lightweight, under 10k, zero dependencies
+* Work with native JS-objects, less syntax to learn
+* Powerfull scoping let's you organize your code
+
+== Learn more
+* http://ippa.se/unitejs/test/ - Tests
+* http://ippa.se/unitejs/examples/list.html - Modify a list
+
+== Loading Unite
+* unite.js - includes the whole framework in one easy-to-include file.
+* unite-min.js - same as unite.js but minified with Googles closure compiler. This is probably what you want to include in your project.
+* unite-dynamic.js - dynamically loads all separate src-files. Useful for debugging errors when patching since you get exact file/line# of possible errors. 
+  Warning, unite-dynamic.js loads all files asynchronously, so Unite might not be fully loaded when the browser reaches your app.js. 
+  You can solve this by hooking into the unite.onload callback.
+
+You can also link to invidual files in your HTML:
+  <script src="/unitejs/src/core.js"></script>
+  <script src="/unitejs/src/sprite.js"></script>
+
+NOTE: core.js is always needed but after that you can pick and choose depending on what you need.
+A rule of thumb is that a file named "foo.js" will include a constructor named Foo().
+
+== Example
+  <!doctype html>
+  <html>
+    <head>
+      <script>
+        app = {
+          header: "Dynamic Lists",
+          items: ["Foo", "Bar", "Moo"],
+          item_name: "New item",
+          addItem: function() { this.items.push(this.item_name) },
+          delItem: function() { this.items = this.items.slice(0, -1) },
+          randomColor: function() { return (Math.random()*10 < 5) ? "red" : "blue" }
+        }
+      </script>
+
+      <script src="../unite.js"></script>
+    </head>
+
+    <body scope="app">
+      <h1 style="color: {{randomColor()}}">{{header}}</h1>
+      <input type="text" value="{{item_name}}" />
+      <button action="addItem">Add item</button>
+      <button action="delItem">Del item</button>
+      <br>
+  
+      <h2>Items</h2>
+      <div loop="items">{{_human_index}} - {{this}}</div>
+    </body>
+  </html>

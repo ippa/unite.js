@@ -1,0 +1,48 @@
+<html>
+  <head>
+    <title>unite.js knockoutjs example</title>
+    <script>
+      app = {};
+
+      tickets_controller = {
+        init: function() {
+        },
+
+        /* Data */
+        tickets: [
+        {name: "Economy", price: 199.95},
+        {name: "Business", price: 449.22},
+        {name: "First Class", price: 1199.99}
+        ],
+        name: "[no name yet]", 
+        price: "[no price yet]",
+
+        /* Click-actions */
+        select_ticket: function(el) {
+          alert("select_ticket: " + el)
+          this.name = "x"
+          this.price = 123;
+        },
+        button_clix: function() {
+          alert("CLIXX!");
+        }
+      };
+
+    </script>
+    <script src="unite.js"></script>
+  </head>
+
+  <body scope="tickets_controller">
+    <button action="button_clix">Click me</button>
+
+    <select action="select_ticket">
+      <option loop="tickets" value="{{_index}}">{{name}}</option>
+    </select>
+
+    <p>You've chosen {{name}}. ( ${{price}} )</p>
+
+    <button id="button">Click me #2</button>
+  </body>
+
+</html>
+

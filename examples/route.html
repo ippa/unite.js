@@ -1,0 +1,31 @@
+<!doctype html>
+<html>
+  <head>
+    <script>
+      app = {
+        header: "Testing routes, please click links",
+        page: function(params) { console.log("/pages/" + params) },
+        contact: function(params) { console.log("/contact") },
+      }
+
+      app.routes = {
+        "/pages/:page": app.page,
+        "/contact": app.contact
+      }
+    </script>
+
+    <script src="../unite-dynamic.js"></script>
+    <script>
+      b.onload = function() { 
+        b.route(app.routes);
+      }
+    </script>
+  </head>
+
+  <body scope="app">
+    <h1>{{header}}</h2>
+    <a href="/contact">contact</a> | 
+    <a href="/pages/about">about</a>
+  </body>
+
+</html>
