@@ -4,8 +4,8 @@
     <script>
       app = {
         header: "Testing routes, please click links",
-        page: function(params) { console.log("/pages/" + params) },
-        contact: function(params) { console.log("/contact") },
+        page: function(params)    { console.log("!! Found page: " + params.page) },
+        contact: function(params) { console.log("!! Matched route /contact") },
       }
 
       app.routes = {
@@ -17,7 +17,7 @@
     <script src="../unite-dynamic.js"></script>
     <script>
       unite.onload = function() { 
-        unite.route(app.routes);
+        unite.router.init(app.routes);
       }
     </script>
   </head>
