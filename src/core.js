@@ -71,23 +71,22 @@ var unite = (function(unite) {
    * Runs when it's possible that a variable has changed.
    */
   unite.update = function() {
-    console.log("========== UPDATE");
+    unite.d("========== UPDATE");
     unite.applyDirty();
   }
 
   /* Applies a bindings data to it's elements */
   unite.apply = function(binding) {
     var tag = binding.element.tagName;
-    console.log("Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
+    unite.d("Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
 
     // Callback object(el) -> el.srcElement vs el.target
     if(binding.action && binding.loop) {
-      console.log("action + loop for " + tag)
+      unite.d("action + loop for " + tag)
       var event_handler = getValue(binding.scope + "." + binding.action);
       var event_handler_with_logic = function(e) { 
         var target = e.target || e.srcElement;
-        console.log("EVENT_HANDLER!!");
-        console.log(e);
+        unite.d("! Event Handler: ", e);
         event_handler(target); 
         unite.update(); 
       }
@@ -120,13 +119,7 @@ var unite = (function(unite) {
     // NOTE: <div loop="persons">{{name}}</div> will return 0 elements
     var elements = element.querySelectorAll("*");
 
-    /*
-    console.log("-------")
-    console.log(binding.scope)
-    console.log("elements: " + elements.length)
-    console.log(binding.content);
-    */
-
+    unite.d("binding.scope: ", binding.scope, ", elements: ", elements.length, ", content", binding.content)
     unite.applyAttributes(element, binding.attributes, binding, scope);
     unite.applyText(element, scope, binding);     
 
@@ -195,11 +188,6 @@ var unite = (function(unite) {
         unite.variable_content[variable] = unite.clone(new_value);
 
         var bindings = findBindingsWithVariable(variable);
-        /*
-           console.log("-----")
-           console.log(variable)
-           console.log(bindings)
-           */
         for(var i=0; i < bindings.length; i++)  unite.apply( bindings[i] );
       }
     }
@@ -263,7 +251,7 @@ var unite = (function(unite) {
    * General way to add events across browsers
    */
   unite.addEvent = function(obj, type, fn) {
-    console.log("addEvent(): " + obj.tagName + " on" + type);
+    // console.log("addEvent(): " + obj.tagName + " on" + type);
     if(obj.addEventListener) { obj.addEventListener(type, fn); }
     else if(obj.attachEvent) {
       obj["e" + type + fn] = fn;
@@ -330,14 +318,12 @@ var unite = (function(unite) {
 
 
   function loopElement(element, scopes, binding) {
-    console.log("loopElement");
-
     // http://jsperf.com/replace-text-vs-reuse/2
     var reusable_elements = getLoopedElements(element, element["loop_id"]);
     var reuse_counter = 0;
     var new_element, prev_element;
 
-    console.log("Found " + reusable_elements.length + " reusable elements");
+    console.log(">> loopElement() .. found ", reusable_elements.length, " reusable elements");
 
     for(var i=0; scopes && (i < scopes.length); i++) {
       var scope = scopes[i];
@@ -485,7 +471,7 @@ var unite = (function(unite) {
       if(array[i].slice(-2) == "()") {
         var var2 = array[i].replace("()","")
         tmp = object[var2]();
-        console.log("EXECUTE FUNCTION: " + array[i]);
+        unite.d("EXECUTE FUNCTION: ", array[i]);
       }
       if(i == array.length-1) {
         /* Bind function to parent to get a correct _this_ */
@@ -503,6 +489,18 @@ var unite = (function(unite) {
     if(unite.isString(object))    return "string";
     if(unite.isNumber(object))    return "number";
     return "object";
+  }
+
+  /** A better debug printer. Mostly cause console.log("Important Object: " + obj) => obj.toString() which sucks */
+  unite.d = function() {
+    var s = "";
+    for(var i=0, arg; arg = arguments[i]; i++) {
+      if(unite.isString(arg))       s += arg;
+      else if(unite.isObject(arg))  s += JSON.stringify(arg);
+      else                          s += arg.toString();
+    }
+    if(console) console.log(s);
+    else        alert(s);
   }
 
   /** Returns true if obj is a String */

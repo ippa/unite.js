@@ -1,6 +1,6 @@
 = Unite.js - lightweight 2-way hierarchical databinding 
 
-= Unite is pre-pre-alpha. _Evertyhing_ is in flux.
+= Unite is pre-pre-alpha. _Everything_ is in flux.
 
 Depends on JavaScript Edition 5. Works with Chrome 9+, Firefox 3.6+, Safari 5+ & IE9.
 Licensed under LGPL so you're free to use it for commercial projects.
