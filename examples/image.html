@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <script>
+      app = {
+        images: [ {name: "5x5"}, {name: "10x10"} ]
+      }
+    </script>
+
+    <script src="../unite-dynamic.js"></script>
+    <script>
+      /* Racecondition but seems to stop images to load when there's still {{stuff}} in their urls */
+      /*
+      unite.onload = function() {
+        var imgs = document.getElementsByTagName("img")
+        for(var i=0; i < imgs.length; i++)  imgs[i].removeAttribute("src");
+      }
+      */
+    </script>
+  </head>
+
+  <body scope="app">
+    <div loop="images"><img src="http://placehold.it/{{name}}" />{{name}}</div>
+  </body>
+
+</html>
