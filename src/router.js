@@ -24,35 +24,72 @@ var unite = (function(unite) {
 
       var body = document.getElementsByTagName('body')[0];
       unite.addEvent(body, "click", this.clickHandler, true);
-      console.log("Router.init!")
-      console.log(body)
+      unite.addEvent(window, "popstate", this.popStateHandler, true);
+    },
+    
+    popStateHandler: function(e) {
+      // console.log(event);
+      that.dispatch(event.url);
     },
 
     clickHandler: function(e) {
       var element = e.target || e.srcElement;
-      var route;
-    
       /*
-      * Travel the dom upwards until we find <A>-tag with a href, trigger click! 
-      * This is needed to catch a correct click when <img> is wrapped inside <a> .. we want the <a>, not <img>
-      */
-      while( (element.getAttribute("href") == null) || element.tagName != "A") {
+       * Travel the dom upwards until we find <A>-tag with a href, trigger click! 
+       * This is needed to catch a correct click when <img> is wrapped inside <a> .. we want the <a>, not <img>
+       */
+      while( (element.getAttribute && element.getAttribute("href") == null) || element.tagName != "A" ) {
         element = element.parentNode
+        if(!element) return;
       }
-      var url = element.getAttribute("href");
+      if(element && element.getAttribute) {
+        var url = element.getAttribute("href");
+        that.dispatch(url);
+      }
+
+      e.stopPropagation();
+      e.preventDefault();
+    },
+
+    /**
+    * Dispatches an URL - meaning, acts on it.
+    *
+    */
+    dispatch: function(url) {
+      // console.log("Executing " + url);
+      if(!url) url = "/";
 
       var matchresult = that.match(url);
       if(matchresult) {
-        unite.log(matchresult)
-        
+        unite.log(matchresult);
+
         if(matchresult.action) {
-          var state = {url: url}
-          history.pushState(state, window.title, url);      
-          matchresult.action(matchresult.params);
+          var scope_function = that.getScopedVariable(matchresult.action);
+          var scope = scope_function[0];
+          var fun = scope_function[1];
+          fun.call(scope, matchresult.params);
+
+          unite.update();
+          if(history) history.pushState({url: url}, window.title, url);
         }
-        e.stopPropagation();
       }
-      e.preventDefault();
+    },
+
+    /**
+     * 
+     * @example processObjectPath("app.home.load") -> [scope(app.home), object(load)]
+     */
+    getScopedVariable: function(string) {
+      if(!string) return undefined;
+      var tmp, object, prev;
+      var array = string.split(".");
+
+      object = window[array[0]];
+      for(var i=1; object && i < array.length; i++) {
+        prev = object;
+        object = object[array[i]];
+      }
+      return [prev, object]
     },
 
     match: function(url) {
@@ -61,7 +98,7 @@ var unite = (function(unite) {
       for(var route in this.routes) {
         if(route == url) return {url: url, action: this.routes[route], params: {}};
       }
-      
+
       /* ... Then match the more complicated regular expression routes */
       for(var i=0; i < this.regexp_routes.length; i++) {
         var regexp_route = this.regexp_routes[i];
@@ -83,21 +120,21 @@ var unite = (function(unite) {
 
     createRegexpRoutes: function(routes) {
       var list = []
-      for(var route in this.routes) {
-        var parameters = [];
-        var regexp = route.replace(this.variable_regexp, function(match, name) {
-          parameters.push(name);
-          return "([\\w]+)";
-        });
+        for(var route in this.routes) {
+          var parameters = [];
+          var regexp = route.replace(this.variable_regexp, function(match, name) {
+            parameters.push(name);
+            return "([\\w]+)";
+          });
 
-        // We only care to make regexp routes if they contain :parameters
-        if(parameters.length > 0) {
-          regexp = regexp.replace(/\//g, "\\\/");
-          regexp = new RegExp(regexp, "i")
-          var route = {url: route, regexp: regexp, parameters: parameters, action: this.routes[route]}
-          list.push(route);
+          // We only care to make regexp routes if they contain :parameters
+          if(parameters.length > 0) {
+            regexp = regexp.replace(/\//g, "\\\/");
+            regexp = new RegExp(regexp, "i")
+              var route = {url: route, regexp: regexp, parameters: parameters, action: this.routes[route]}
+            list.push(route);
+          }
         }
-      }
       return list;
     }
   }
