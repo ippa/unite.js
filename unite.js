@@ -1,4 +1,4 @@
-/* Built at 2013-07-24 22:51:08 +0200 */
+/* Built at 2013-07-26 05:48:11 +0200 */
 'use strict';
 /*
  *
@@ -45,7 +45,9 @@ var unite = (function(unite) {
    */
   unite.init = function(html, options) {
     if(options === undefined) options = {render: true};
+    
     var elements;
+    unite.debug = unite.urlParameters()["debug"] == "1";
 
     /* masterlist containing all variables referenced in the DOM and their values */
     unite.variable_content = {};
@@ -72,23 +74,21 @@ var unite = (function(unite) {
    * Runs when it's possible that a variable has changed.
    */
   unite.update = function() {
-    console.log("========== UPDATE");
     unite.applyDirty();
   }
 
   /* Applies a bindings data to it's elements */
   unite.apply = function(binding) {
     var tag = binding.element.tagName;
-    console.log("Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
+    unite.log("Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
 
     // Callback object(el) -> el.srcElement vs el.target
     if(binding.action && binding.loop) {
-      console.log("action + loop for " + tag)
+      unite.log("action + loop for " + tag)
       var event_handler = getValue(binding.scope + "." + binding.action);
       var event_handler_with_logic = function(e) { 
         var target = e.target || e.srcElement;
-        console.log("EVENT_HANDLER!!");
-        console.log(e);
+        console.log("!! Event Handler: " + e);
         event_handler(target); 
         unite.update(); 
       }
@@ -121,13 +121,7 @@ var unite = (function(unite) {
     // NOTE: <div loop="persons">{{name}}</div> will return 0 elements
     var elements = element.querySelectorAll("*");
 
-    /*
-    console.log("-------")
-    console.log(binding.scope)
-    console.log("elements: " + elements.length)
-    console.log(binding.content);
-    */
-
+    unite.log("binding.scope: ", binding.scope, ", elements: ", elements.length, ", content", binding.content)
     unite.applyAttributes(element, binding.attributes, binding, scope);
     unite.applyText(element, scope, binding);     
 
@@ -160,12 +154,12 @@ var unite = (function(unite) {
       var value = binding.content || child.nodeValue;
       child.nodeValue = value.replace(unite.variable_regexp, function(match, name) { 
         if(scope[name] !== undefined) { 
-          console.log("applyElement(): " + name + " -> " + scope[name]);
+          unite.log("applyElement(): ", name, " -> ", scope[name]);
           return scope[name];
         }
         else { 
           var variable = binding.scope + "." + name;
-          console.log("applyElement(): " + variable + " -> " + getValue(variable));
+          unite.log("applyElement(): ", variable, " -> " + getValue(variable));
           var ret = getValue(variable);
           return ret ? ret : match;
         }
@@ -191,16 +185,11 @@ var unite = (function(unite) {
     for(var variable in unite.variable_content) {
       if( unite.isDirty(variable, unite.variable_content[variable]) ) {
         var new_value = getValue(variable);
-        console.log("Variable has changed: " + variable + ": " +  unite.variable_content[variable] + " -> " + new_value);
+        unite.log("Variable has changed: ", variable, ": ", unite.variable_content[variable], " -> ", new_value);
 
         unite.variable_content[variable] = unite.clone(new_value);
 
         var bindings = findBindingsWithVariable(variable);
-        /*
-           console.log("-----")
-           console.log(variable)
-           console.log(bindings)
-           */
         for(var i=0; i < bindings.length; i++)  unite.apply( bindings[i] );
       }
     }
@@ -263,9 +252,8 @@ var unite = (function(unite) {
   /*
    * General way to add events across browsers
    */
-  unite.addEvent = function(obj, type, fn) {
-    console.log("addEvent(): " + obj.tagName + " on" + type);
-    if(obj.addEventListener) { obj.addEventListener(type, fn); }
+  unite.addEvent = function(obj, type, fn, useCapture) {
+    if(obj.addEventListener) { obj.addEventListener(type, fn, useCapture); }
     else if(obj.attachEvent) {
       obj["e" + type + fn] = fn;
       obj[type + fn] = function () { obj["e" + type + fn](window.event); }
@@ -331,14 +319,12 @@ var unite = (function(unite) {
 
 
   function loopElement(element, scopes, binding) {
-    console.log("loopElement");
-
     // http://jsperf.com/replace-text-vs-reuse/2
     var reusable_elements = getLoopedElements(element, element["loop_id"]);
     var reuse_counter = 0;
     var new_element, prev_element;
 
-    console.log("Found " + reusable_elements.length + " reusable elements");
+    unite.log(">> loopElement() .. found ", reusable_elements.length, " reusable elements");
 
     for(var i=0; scopes && (i < scopes.length); i++) {
       var scope = scopes[i];
@@ -453,9 +439,7 @@ var unite = (function(unite) {
 
   /* Find {{vars}} in attributes */
   unite.attributesWithVariables = function(element) {
-    /*
-       value = binding.attributes[i][attr].replace(unite.variable_regexp, function(match, name) { });
-       */
+    // value = binding.attributes[i][attr].replace(unite.variable_regexp, function(match, name) { });
     var list = [];
     for(var i=0; i < element.attributes.length; i++) {
       var attr = element.attributes[i];
@@ -486,7 +470,7 @@ var unite = (function(unite) {
       if(array[i].slice(-2) == "()") {
         var var2 = array[i].replace("()","")
         tmp = object[var2]();
-        console.log("EXECUTE FUNCTION: " + array[i]);
+        unite.log("EXECUTE FUNCTION: ", array[i]);
       }
       if(i == array.length-1) {
         /* Bind function to parent to get a correct _this_ */
@@ -504,6 +488,36 @@ var unite = (function(unite) {
     if(unite.isString(object))    return "string";
     if(unite.isNumber(object))    return "number";
     return "object";
+  }
+
+  /**
+   * Return a hash of url-parameters and their values
+   *
+   * @example
+   *   // Given the current URL is <b>http://test.com/?debug=1&foo=bar</b>
+   *   urlParameters() // --> {debug: 1, foo: bar}
+   */
+  unite.urlParameters = function() {
+    var parameters = {}, hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++) {
+      hash = hashes[i].split('=');
+      parameters[hash[0]] = hash[1];
+    }
+    return parameters;
+  }
+
+  /** A better debug printer. Mostly cause console.log("Important Object: " + obj) => obj.toString() which sucks */
+  unite.log = function() {
+    if(!unite.debug) return;
+    var s = "";
+    for(var i=0, arg; arg = arguments[i]; i++) {
+      if(unite.isString(arg))       s += arg;
+      else if(unite.isObject(arg))  s += JSON.stringify(arg);
+      else                          s += arg.toString();
+    }
+    if(console) console.log(s);
+    else        alert(s);
   }
 
   /** Returns true if obj is a String */
@@ -570,79 +584,141 @@ window.onload = function() {
  *
  * unite.js - router
  *
+ * - Use history.pushState exclusively
+ * - Don't bother with old crappy location.hash
+ *
  */
+var last_click;
+
 var unite = (function(unite) {
-  var routes;
-  var regexp_routes = [];
-  var REGEXP = /(:[\w]+)/ig
- 
-  unite.debug_routes = function() {
-    console.log(routes);
-    console.log(regexp_routes);
-  }
+  var that = this;
 
+  unite.router = {
+    routes: [],
+    regexp_routes: [],
+    variable_regexp: /:([\w]+)/ig,
 
-  unite.route = function(new_routes) {
-    routes = new_routes
-    regexp_routes = createRegexpRoutes(routes)
+    init: function(new_routes) {
+      that = this;
+      this.routes = new_routes;
+      this.regexp_routes = this.createRegexpRoutes(this.routes);
 
-  /*
-    console.log("Route()");
-    console.log(routes);
-*/
-    var body = document.getElementsByTagName('body')[0];
-    unite.addEvent(body, "click", clickHandler);
-  }
+      var body = document.getElementsByTagName('body')[0];
+      unite.addEvent(body, "click", this.clickHandler, true);
+      unite.addEvent(window, "popstate", this.popStateHandler, true);
+    },
+    
+    popStateHandler: function(e) {
+      // console.log(event);
+      that.dispatch(event.url);
+    },
 
-  function clickHandler(e) {
-    var element = e.target || e.srcElement;
-    var url = element.getAttribute("href")
-    if(!url) return
-
-    console.log("* ROUTER CLICK: " + url);
-    console.log("* ROUTER MATCH: ");
-    console.log(matchRoute(url));
-    console.log("* REGEXP ROUTER MATCH: ");
-    console.log(matchRegexpRoute(url));
-
-    e.preventDefault();
-    e.stopPropagation();
-  }
-
-  function matchRoute(url) {
-    for(var route in routes) {
-      if(route == url) return {action: routes[route], params: {}};
-    }
-  }
-
-  function matchRegexpRoute(url) {
-    for(var regexp_route in regexp_routes) {
-      if(url.match(regexp_route.regexp)) {
-        return {action: regexp_route.action, params: regexp_route.parametrers};
+    clickHandler: function(e) {
+      var element = e.target || e.srcElement;
+      /*
+       * Travel the dom upwards until we find <A>-tag with a href, trigger click! 
+       * This is needed to catch a correct click when <img> is wrapped inside <a> .. we want the <a>, not <img>
+       */
+      while( (element.getAttribute && element.getAttribute("href") == null) || element.tagName != "A" ) {
+        element = element.parentNode
+        if(!element) return;
       }
+      if(element && element.getAttribute) {
+        var url = element.getAttribute("href");
+        that.dispatch(url);
+      }
+
+      e.stopPropagation();
+      e.preventDefault();
+    },
+
+    /**
+    * Dispatches an URL - meaning, acts on it.
+    *
+    */
+    dispatch: function(url) {
+      // console.log("Executing " + url);
+      if(!url) url = "/";
+
+      var matchresult = that.match(url);
+      if(matchresult) {
+        unite.log(matchresult);
+
+        if(matchresult.action) {
+          var scope_function = that.getScopedVariable(matchresult.action);
+          var scope = scope_function[0];
+          var fun = scope_function[1];
+          fun.call(scope, matchresult.params);
+
+          unite.update();
+          if(history) history.pushState({url: url}, window.title, url);
+        }
+      }
+    },
+
+    /**
+     * 
+     * @example processObjectPath("app.home.load") -> [scope(app.home), object(load)]
+     */
+    getScopedVariable: function(string) {
+      if(!string) return undefined;
+      var tmp, object, prev;
+      var array = string.split(".");
+
+      object = window[array[0]];
+      for(var i=1; object && i < array.length; i++) {
+        prev = object;
+        object = object[array[i]];
+      }
+      return [prev, object]
+    },
+
+    match: function(url) {
+      if(!url) return undefined;
+      /* First try to match simple routes without parameters */ 
+      for(var route in this.routes) {
+        if(route == url) return {url: url, action: this.routes[route], params: {}};
+      }
+
+      /* ... Then match the more complicated regular expression routes */
+      for(var i=0; i < this.regexp_routes.length; i++) {
+        var regexp_route = this.regexp_routes[i];
+        var values = url.match(regexp_route.regexp);
+
+        if(values && values.length > 0) {
+          values.shift();
+
+          var params = {};
+          for(var r=0; r < regexp_route.parameters.length; r++) {
+            params[regexp_route.parameters[r]] = values[r]
+          }
+
+          //return {action: regexp_route.action, regexp: regexp_route.regexp, params: regexp_route.parameters, values: values};
+          return {url: url, action: regexp_route.action, params: params};
+        }
+      }
+    },
+
+    createRegexpRoutes: function(routes) {
+      var list = []
+        for(var route in this.routes) {
+          var parameters = [];
+          var regexp = route.replace(this.variable_regexp, function(match, name) {
+            parameters.push(name);
+            return "([\\w]+)";
+          });
+
+          // We only care to make regexp routes if they contain :parameters
+          if(parameters.length > 0) {
+            regexp = regexp.replace(/\//g, "\\\/");
+            regexp = new RegExp(regexp, "i")
+              var route = {url: route, regexp: regexp, parameters: parameters, action: this.routes[route]}
+            list.push(route);
+          }
+        }
+      return list;
     }
   }
-
-  function createRegexpRoutes(routes) {
-    var list = []
-    for(var route in routes) {
-      var parameters = [];
-      var regexp = route.replace(REGEXP, function(match, name) {
-        parameters.push(name);
-        return "([\\w+])";
-      });
-      var route = {url: route, regexp: regexp, parameters: parameters, action: routes[route]}
-      list.push(route);
-
-      console.log(route);
-      return route
-    }
-  }
-
-
-  function harvestRouteParameters(url) {
-  }
-
   return unite;
 })(unite || {});
 
