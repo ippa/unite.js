@@ -3,50 +3,66 @@
  *
  * unite.js - router
  *
- * - Let's use real URLs per default
+ * - Use history.pushState exclusively
+ * - Don't bother with old crappy location.hash
  *
  */
+var last_click;
+
 var unite = (function(unite) {
   var that = this;
+
   unite.router = {
     routes: [],
     regexp_routes: [],
     variable_regexp: /:([\w]+)/ig,
 
     init: function(new_routes) {
-      that = this
+      that = this;
       this.routes = new_routes;
       this.regexp_routes = this.createRegexpRoutes(this.routes);
 
       var body = document.getElementsByTagName('body')[0];
-      unite.addEvent(body, "click", this.clickHandler);
+      unite.addEvent(body, "click", this.clickHandler, true);
+      console.log("Router.init!")
+      console.log(body)
     },
 
     clickHandler: function(e) {
       var element = e.target || e.srcElement;
-      var url = element.getAttribute("href");
       var route;
-      if(!url) return;
+    
+      /*
+      * Travel the dom upwards until we find <A>-tag with a href, trigger click! 
+      * This is needed to catch a correct click when <img> is wrapped inside <a> .. we want the <a>, not <img>
+      */
+      while( (element.getAttribute("href") == null) || element.tagName != "A") {
+        element = element.parentNode
+      }
+      var url = element.getAttribute("href");
 
       var matchresult = that.match(url);
       if(matchresult) {
-        unite.d("Router: ", matchresult)
+        unite.log(matchresult)
         
         if(matchresult.action) {
           var state = {url: url}
           history.pushState(state, window.title, url);      
           matchresult.action(matchresult.params);
         }
-        e.preventDefault();
         e.stopPropagation();
       }
+      e.preventDefault();
     },
 
     match: function(url) {
+      if(!url) return undefined;
+      /* First try to match simple routes without parameters */ 
       for(var route in this.routes) {
         if(route == url) return {url: url, action: this.routes[route], params: {}};
       }
       
+      /* ... Then match the more complicated regular expression routes */
       for(var i=0; i < this.regexp_routes.length; i++) {
         var regexp_route = this.regexp_routes[i];
         var values = url.match(regexp_route.regexp);
