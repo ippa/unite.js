@@ -27,3 +27,10 @@ test("multiple routes", function() {
   same(unite.router.match("/"), {url: "/", action: f2, params: {}} , "non-matching route should return undefined")
   same(unite.router.match("/contact"), {url: "/contact", action: f, params: {}}, "existing route should return match-object")
 });
+
+test("other", function() {
+  window.app = { home: { login: "1" } }
+  var result = unite.router.getScopedVariable("app.home.login")
+  same(result[0], app.home, "First parameter is scope")
+  same(result[1], app.home.login, "Second is the variable")
+});
