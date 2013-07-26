@@ -44,7 +44,9 @@ var unite = (function(unite) {
    */
   unite.init = function(html, options) {
     if(options === undefined) options = {render: true};
+    
     var elements;
+    unite.debug = unite.urlParameters()["debug"] == "1";
 
     /* masterlist containing all variables referenced in the DOM and their values */
     unite.variable_content = {};
@@ -71,22 +73,21 @@ var unite = (function(unite) {
    * Runs when it's possible that a variable has changed.
    */
   unite.update = function() {
-    unite.d("========== UPDATE");
     unite.applyDirty();
   }
 
   /* Applies a bindings data to it's elements */
   unite.apply = function(binding) {
     var tag = binding.element.tagName;
-    unite.d("Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
+    unite.log("Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
 
     // Callback object(el) -> el.srcElement vs el.target
     if(binding.action && binding.loop) {
-      unite.d("action + loop for " + tag)
+      unite.log("action + loop for " + tag)
       var event_handler = getValue(binding.scope + "." + binding.action);
       var event_handler_with_logic = function(e) { 
         var target = e.target || e.srcElement;
-        unite.d("! Event Handler: ", e);
+        console.log("!! Event Handler: " + e);
         event_handler(target); 
         unite.update(); 
       }
@@ -119,7 +120,7 @@ var unite = (function(unite) {
     // NOTE: <div loop="persons">{{name}}</div> will return 0 elements
     var elements = element.querySelectorAll("*");
 
-    unite.d("binding.scope: ", binding.scope, ", elements: ", elements.length, ", content", binding.content)
+    unite.log("binding.scope: ", binding.scope, ", elements: ", elements.length, ", content", binding.content)
     unite.applyAttributes(element, binding.attributes, binding, scope);
     unite.applyText(element, scope, binding);     
 
@@ -152,12 +153,12 @@ var unite = (function(unite) {
       var value = binding.content || child.nodeValue;
       child.nodeValue = value.replace(unite.variable_regexp, function(match, name) { 
         if(scope[name] !== undefined) { 
-          console.log("applyElement(): " + name + " -> " + scope[name]);
+          unite.log("applyElement(): ", name, " -> ", scope[name]);
           return scope[name];
         }
         else { 
           var variable = binding.scope + "." + name;
-          console.log("applyElement(): " + variable + " -> " + getValue(variable));
+          unite.log("applyElement(): ", variable, " -> " + getValue(variable));
           var ret = getValue(variable);
           return ret ? ret : match;
         }
@@ -183,7 +184,7 @@ var unite = (function(unite) {
     for(var variable in unite.variable_content) {
       if( unite.isDirty(variable, unite.variable_content[variable]) ) {
         var new_value = getValue(variable);
-        console.log("Variable has changed: " + variable + ": " +  unite.variable_content[variable] + " -> " + new_value);
+        unite.log("Variable has changed: ", variable, ": ", unite.variable_content[variable], " -> ", new_value);
 
         unite.variable_content[variable] = unite.clone(new_value);
 
@@ -250,9 +251,8 @@ var unite = (function(unite) {
   /*
    * General way to add events across browsers
    */
-  unite.addEvent = function(obj, type, fn) {
-    // console.log("addEvent(): " + obj.tagName + " on" + type);
-    if(obj.addEventListener) { obj.addEventListener(type, fn); }
+  unite.addEvent = function(obj, type, fn, useCapture) {
+    if(obj.addEventListener) { obj.addEventListener(type, fn, useCapture); }
     else if(obj.attachEvent) {
       obj["e" + type + fn] = fn;
       obj[type + fn] = function () { obj["e" + type + fn](window.event); }
@@ -323,7 +323,7 @@ var unite = (function(unite) {
     var reuse_counter = 0;
     var new_element, prev_element;
 
-    console.log(">> loopElement() .. found ", reusable_elements.length, " reusable elements");
+    unite.log(">> loopElement() .. found ", reusable_elements.length, " reusable elements");
 
     for(var i=0; scopes && (i < scopes.length); i++) {
       var scope = scopes[i];
@@ -438,9 +438,7 @@ var unite = (function(unite) {
 
   /* Find {{vars}} in attributes */
   unite.attributesWithVariables = function(element) {
-    /*
-       value = binding.attributes[i][attr].replace(unite.variable_regexp, function(match, name) { });
-       */
+    // value = binding.attributes[i][attr].replace(unite.variable_regexp, function(match, name) { });
     var list = [];
     for(var i=0; i < element.attributes.length; i++) {
       var attr = element.attributes[i];
@@ -471,7 +469,7 @@ var unite = (function(unite) {
       if(array[i].slice(-2) == "()") {
         var var2 = array[i].replace("()","")
         tmp = object[var2]();
-        unite.d("EXECUTE FUNCTION: ", array[i]);
+        unite.log("EXECUTE FUNCTION: ", array[i]);
       }
       if(i == array.length-1) {
         /* Bind function to parent to get a correct _this_ */
@@ -491,8 +489,26 @@ var unite = (function(unite) {
     return "object";
   }
 
+  /**
+   * Return a hash of url-parameters and their values
+   *
+   * @example
+   *   // Given the current URL is <b>http://test.com/?debug=1&foo=bar</b>
+   *   urlParameters() // --> {debug: 1, foo: bar}
+   */
+  unite.urlParameters = function() {
+    var parameters = {}, hash;
+    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for(var i = 0; i < hashes.length; i++) {
+      hash = hashes[i].split('=');
+      parameters[hash[0]] = hash[1];
+    }
+    return parameters;
+  }
+
   /** A better debug printer. Mostly cause console.log("Important Object: " + obj) => obj.toString() which sucks */
-  unite.d = function() {
+  unite.log = function() {
+    if(!unite.debug) return;
     var s = "";
     for(var i=0, arg; arg = arguments[i]; i++) {
       if(unite.isString(arg))       s += arg;
