@@ -89,10 +89,14 @@ var unite = (function(unite) {
           parameters.push(name);
           return "([\\w]+)";
         });
-        regexp = regexp.replace(/\//g, "\\\/");
-        regexp = new RegExp(regexp, "i")
-        var route = {url: route, regexp: regexp, parameters: parameters, action: this.routes[route]}
-        list.push(route);
+
+        // We only care to make regexp routes if they contain :parameters
+        if(parameters.length > 0) {
+          regexp = regexp.replace(/\//g, "\\\/");
+          regexp = new RegExp(regexp, "i")
+          var route = {url: route, regexp: regexp, parameters: parameters, action: this.routes[route]}
+          list.push(route);
+        }
       }
       return list;
     }
