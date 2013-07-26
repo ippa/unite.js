@@ -9,7 +9,7 @@
  * introduces 3 custom attributes called directives:
  *
  * - scope            <div scope="header"><h1>{{title}}</h1></div>
- * - action           <button action="doSomething">Click me</button>
+ * - event            <button event="doSomething">Click me</button>
  * - loop             <li loop="persons">{{name}}</li>
  *
  */
@@ -82,9 +82,9 @@ var unite = (function(unite) {
     unite.log("Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
 
     // Callback object(el) -> el.srcElement vs el.target
-    if(binding.action && binding.loop) {
-      unite.log("action + loop for " + tag)
-      var event_handler = getValue(binding.scope + "." + binding.action);
+    if(binding.event && binding.loop) {
+      unite.log("event + loop for " + tag)
+      var event_handler = getValue(binding.scope + "." + binding.event);
       var event_handler_with_logic = function(e) { 
         var target = e.target || e.srcElement;
         console.log("!! Event Handler: " + e);
@@ -98,14 +98,14 @@ var unite = (function(unite) {
       var scope = getValue(binding.scope + "." + binding.loop);
       loopElement(binding.element, scope, binding);
     }
-    else if(binding.action && !binding.loop) {
-      var event_handler = getValue(binding.scope + "." + binding.action);
+    else if(binding.event && !binding.loop) {
+      var event_handler = getValue(binding.scope + "." + binding.event);
       var event_handler_with_update = function() { event_handler(); unite.update(); }
       var event = tag_to_default_event[tag];
       if(!event) event = "click";
       unite.addEvent(binding.element, event, event_handler_with_update);
     }
-    else if(!binding.action && binding.loop)  { 
+    else if(!binding.event && binding.loop)  { 
       var scope = getValue(binding.scope + "." + binding.loop);
       loopElement(binding.element, scope, binding);
     }
@@ -279,11 +279,11 @@ var unite = (function(unite) {
       if(variables.length > 0) {
         for(var v=0; v < variables.length; v++) { unite.variable_content[ variables[v] ] = ""; }
 
-        var action = element.getAttribute("action");
+        var event = element.getAttribute("event");
         var loop = element.getAttribute("loop");
         var tpl_element = null;
 
-        var entry = {element: element, scope: scope, action: action, attributes: attributes, variables: variables, content: content}
+        var entry = {element: element, scope: scope, event: event, attributes: attributes, variables: variables, content: content}
 
         // Looping element, clone original element (for later further cloning) and hide it.
         if(loop) {
@@ -387,12 +387,12 @@ var unite = (function(unite) {
       }
     }
 
-    // Add special attribute-variables like  action="doSomething"
+    // Add special attribute-variables like  event="doSomething"
     for(var i=0; i < element.attributes.length; i++) {
       var name = element.attributes[i].nodeName;
       var value = element.attributes[i].nodeValue;
       if(name == "scope" || name == "loop")   list.push(scope);
-      else if(name == "action")               list.push(scope + "." + value);
+      else if(name == "event")                list.push(scope + "." + value);
     }
 
     return list;
