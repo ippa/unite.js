@@ -44,7 +44,7 @@ var unite = (function(unite) {
    */
   unite.init = function(html, options) {
     if(options === undefined) options = {render: true};
-    
+
     var elements;
     unite.debug = unite.urlParameters()["debug"] == "1";
 
@@ -84,11 +84,15 @@ var unite = (function(unite) {
     // Callback object(el) -> el.srcElement vs el.target
     if(binding.event && binding.loop) {
       unite.log("event + loop for " + tag)
-      var event_handler = getValue(binding.scope + "." + binding.event);
+        var event_handler = getValue(binding.scope + "." + binding.event);
       var event_handler_with_logic = function(e) { 
         var target = e.target || e.srcElement;
         console.log("!! Event Handler: " + e);
-        event_handler(target); 
+
+        // TODO: decide on this.
+        // event_handler(target); 
+        event_handler(e); 
+
         unite.update(); 
       }
       var event = tag_to_default_event[tag];
@@ -100,7 +104,7 @@ var unite = (function(unite) {
     }
     else if(binding.event && !binding.loop) {
       var event_handler = getValue(binding.scope + "." + binding.event);
-      var event_handler_with_update = function() { event_handler(); unite.update(); }
+      var event_handler_with_update = function(e) { event_handler(e); unite.update(); }
       var event = tag_to_default_event[tag];
       if(!event) event = "click";
       unite.addEvent(binding.element, event, event_handler_with_update);
@@ -121,7 +125,7 @@ var unite = (function(unite) {
     var elements = element.querySelectorAll("*");
 
     unite.log("binding.scope: ", binding.scope, ", elements: ", elements.length, ", content", binding.content)
-    unite.applyAttributes(element, binding.attributes, binding, scope);
+      unite.applyAttributes(element, binding.attributes, binding, scope);
     unite.applyText(element, scope, binding);     
 
     /* Apply to all child-elements */
@@ -167,17 +171,17 @@ var unite = (function(unite) {
   }
 
   /*
-  unite.lookupValue = function(name, scope, scope2) {
-    if(scope2[name] !== undefined) { 
-      return scope2[name];
-    }
-    else { 
-      var variable = scope + "." + name;
-      var ret = getValue(variable);
-      return ret ? ret : name;
-    }
-  }
-  */
+     unite.lookupValue = function(name, scope, scope2) {
+     if(scope2[name] !== undefined) { 
+     return scope2[name];
+     }
+     else { 
+     var variable = scope + "." + name;
+     var ret = getValue(variable);
+     return ret ? ret : name;
+     }
+     }
+     */
 
   /* Checks for bindings with dirty data and runs apply() on them */
   unite.applyDirty = function() {
@@ -464,11 +468,11 @@ var unite = (function(unite) {
     for(var i=1; object && i < array.length; i++) {
       prev = object;
       tmp = object[array[i]];
-      
+
       /* If variable name is ending with () AND are functions, execute them and use return value! */
       if(array[i].slice(-2) == "()") {
         var var2 = array[i].replace("()","")
-        tmp = object[var2]();
+          tmp = object[var2]();
         unite.log("EXECUTE FUNCTION: ", array[i]);
       }
       if(i == array.length-1) {
@@ -570,6 +574,33 @@ var unite = (function(unite) {
     }
     return indexOf.call(this, needle);
   };
+
+  /* START POLYFILLS */
+  /* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind */
+  if (!Function.prototype.bind) {
+    Function.prototype.bind = function (oThis) {
+      if (typeof this !== "function") {
+        // closest thing possible to the ECMAScript 5 internal IsCallable function
+        throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+      }
+
+      var aArgs = Array.prototype.slice.call(arguments, 1), 
+          fToBind = this, 
+          fNOP = function () {},
+          fBound = function () {
+            return fToBind.apply(this instanceof fNOP && oThis
+                ? this
+                : oThis,
+                aArgs.concat(Array.prototype.slice.call(arguments)));
+          };
+
+      fNOP.prototype = this.prototype;
+      fBound.prototype = new fNOP();
+
+      return fBound;
+    };
+  }
+  /* END POLYFILLS */
 
   return unite;
 })(unite || {});
