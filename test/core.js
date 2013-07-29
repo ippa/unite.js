@@ -52,6 +52,7 @@ test("Variable replacement", function() {
   out = '<head></head><body scope="app" style="background: red"></body>'
   same(b.init(tpl).render(), out, "nested variable in attribute value")
 
+
   /*
   root = { app: { strings: {greeting: "Hello", friends: {first: "ippa", second: "harrison"} } } }
   tpl = '<head></head><body scope="root.app"><h1 scope="strings">{{greeting}} {{friends.first}} and {{friends.second}}</h1></body>'
@@ -99,7 +100,39 @@ test("Loops", function() {
   tpl = '<head></head><body scope="app"><div loop="list">{{name}} does {{speciality}}</div></body>'
   out = '<head></head><body scope="app"><div loop="list" style="display: none;">{{name}} does {{speciality}}</div><div>ippa does javascript</div><div>harrison does design</div></body>'
   same(b.init(tpl).render(), out, "looping through objects")
+});
 
+test("Datareplacement and re-render", function() {
+  app = { list: [1, 2] }
+  tpl = '<head></head><body scope="app"><div loop="list">{{this}}</div></body>'
+  out = '<head></head><body scope="app"><div loop="list" style="display: none;">{{this}}</div><div>1</div><div>2</div></body>'
+  same(b.init(tpl).render(), out, "loop over array of numbers")
+
+  app.list = [3, 4]
+  b.update();
+  out = '<head></head><body scope="app"><div loop="list" style="display: none;">{{this}}</div><div>3</div><div>4</div></body>'
+  same(b.render(), out, "loop over new same-size array of numbers")
+
+  app = { list: [{nr: 1}, {nr: 2}] }
+  tpl = '<head></head><body scope="app"><div loop="list">{{nr}}</div></body>'
+  out = '<head></head><body scope="app"><div loop="list" style="display: none;">{{nr}}</div><div>1</div><div>2</div></body>'
+  same(b.init(tpl).render(), out, "loop over array of objects")
+
+  app.list = [{nr: 3}, {nr: 4}]
+  b.update();
+  out = '<head></head><body scope="app"><div loop="list" style="display: none;">{{nr}}</div><div>3</div><div>4</div></body>'
+  same(b.render(), out, "loop over new same-size array of numbers")
+
+
+  app = { list: [{nr: 1}, {nr: 2}] }
+  tpl = '<head></head><body scope="app"><div loop="list"><span id="{{nr}}"></span></div></body>'
+  out = '<head></head><body scope="app"><div loop="list" style="display: none;"><span id="{{nr}}"></span></div><div><span id="1"></span></div><div><span id="2"></span></div></body>'
+  same(b.init(tpl).render(), out, "loop over array of objects with var-filled html-tag within loop")
+
+  app.list = [{nr: 3}, {nr: 4}]
+  b.update();
+  out = '<head></head><body scope="app"><div loop="list" style="display: none;"><span id="{{nr}}"></span></div><div><span id="3"></span></div><div><span id="4"></span></div></body>'
+  same(b.render(), out, "loop over new same-size array of objects with var-filled html-tag within loop")
 
 });
 

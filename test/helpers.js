@@ -1,7 +1,7 @@
 module("helpers");
 QUnit.config.reorder = false;
 
-test("b.isDirty", function() {
+test("unite.isDirty", function() {
   a = [1,2];
   same( b.isDirty("a", [1,2]), false, "arrays with the same content aren't dirty");
   same( b.isDirty("a", [1,2,3]), true, "arrays with different content are dirty");
@@ -30,7 +30,7 @@ test("b.isDirty", function() {
   same( b.isDirty("f", function() {return false}), true, "functions with different content are dirty");
 });
 
-test("b.attributesWithVariables", function() {
+test("unite.attributesWithVariables", function() {
   tpl = '<head></head><body scope="app"><button action="{{test}}" style="color: {{color}}"></div></body>'
   b.init(tpl, {render: false});
   var element = b.document.getElementsByTagName("button")[0]
