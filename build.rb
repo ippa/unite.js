@@ -7,7 +7,7 @@ File.open("unite.js", "w") do |out|
   out.write("/* Built at #{Time.now.to_s} */\n")
   files = ["core.js", "router.js"]
   files.each { |file| out.write( File.read("src/#{file}") ) }
-  ## out.write(";window.addEventListener(\"load\", function() { if(unite.onload) unite.onload(); }, false);")
+  out.write(";unite.addEvent(window, \"load\", function() { if(unite.onload) unite.onload(); }, false);")
 end
 
 #
