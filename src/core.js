@@ -124,8 +124,8 @@ var unite = (function(unite) {
     // NOTE: <div loop="persons">{{name}}</div> will return 0 elements
     var elements = element.querySelectorAll("*");
 
-    unite.log("binding.scope: ", binding.scope, ", elements: ", elements.length, ", content", binding.content)
-      unite.applyAttributes(element, binding.attributes, binding, scope);
+    unite.log("binding.scope: ", binding.scope, ", elements: ", elements.length, ", content", binding.content);
+    unite.applyAttributes(element, binding.attributes, binding, scope);
     unite.applyText(element, scope, binding);     
 
     /* Apply to all child-elements */
@@ -170,19 +170,6 @@ var unite = (function(unite) {
     }
   }
 
-  /*
-     unite.lookupValue = function(name, scope, scope2) {
-     if(scope2[name] !== undefined) { 
-     return scope2[name];
-     }
-     else { 
-     var variable = scope + "." + name;
-     var ret = getValue(variable);
-     return ret ? ret : name;
-     }
-     }
-     */
-
   /* Checks for bindings with dirty data and runs apply() on them */
   unite.applyDirty = function() {
     for(var variable in unite.variable_content) {
@@ -197,6 +184,16 @@ var unite = (function(unite) {
       }
     }
   }
+
+  /* Applies all data to all variables */
+  unite.applyAll = function() {
+    for(var variable in unite.variable_content) {
+      var bindings = findBindingsWithVariable(variable);
+      for(var i=0; i < bindings.length; i++)  unite.apply( bindings[i] );
+    }
+  }
+
+
   /*
    * Clones objects and arrays. Returns argument for other datatypes.
    *
@@ -228,12 +225,15 @@ var unite = (function(unite) {
     if(!prev_value && !current_value)   return false;
     if(!prev_value && current_value)    return true;
     if(prev_value && !current_value)    return true;
-
     if(unite.isFunction(prev_value) && unite.isFunction(current_value)) { return (prev_value.toString() != current_value.toString()) }
-    else if(prev_value.length !== undefined && current_value.length !== undefined) {
+    
+    if(prev_value.length !== undefined && current_value.length !== undefined) {
       if(prev_value.length != current_value.length) return true;
     }
-    else if(JSON.stringify(prev_value) === JSON.stringify(current_value)) return false;
+    if(JSON.stringify(prev_value) != JSON.stringify(current_value)) {
+      return true;
+    }
+    if(JSON.stringify(prev_value) == JSON.stringify(current_value)) return false;
     else if(prev_value != current_value)     return true;
     return false;
   }
@@ -315,7 +315,7 @@ var unite = (function(unite) {
     var list = [];
     var elements = element.parentNode.querySelectorAll("*");
     for(var i=0; i < elements.length; i++) {
-      if(elements[i]["looped_id"] == loop_id ) list.push(elements[i]);
+      if( elements[i]["looped_id"] == loop_id ) list.push(elements[i]);
     }
     return list;
   }
@@ -327,7 +327,18 @@ var unite = (function(unite) {
     var reuse_counter = 0;
     var new_element, prev_element;
 
-    unite.log(">> loopElement() .. found ", reusable_elements.length, " reusable elements");
+    // console.log(">> loopElement() .. found ", reusable_elements.length, " reusable elements");
+
+    //
+    // TEMP HACK UNTILL WE SORT OUT:
+    // <a loop='images' href="/bilder/{{id}}"><img src="/bilder/{{id}}_size2.jpg" id="{{id}}"/></a>
+    //
+    // ( img src="" doesn't change )
+    //
+    while(reuse_counter < reusable_elements.length) {
+      element.parentNode.removeChild( reusable_elements[reuse_counter] );
+      reuse_counter += 1;
+    }
 
     for(var i=0; scopes && (i < scopes.length); i++) {
       var scope = scopes[i];
