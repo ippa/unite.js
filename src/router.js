@@ -3,6 +3,7 @@
  *
  * unite.js - router
  *
+ * - Add click-listener on body, dispatch all clicks on <A> and <BUTTON> with a href.
  * - Use history.pushState exclusively
  * - Don't bother with old crappy location.hash
  *
@@ -28,7 +29,6 @@ var unite = (function(unite) {
     },
     
     popStateHandler: function(e) {
-      // console.log(event);
       that.dispatch(event.url);
     },
 
@@ -38,7 +38,7 @@ var unite = (function(unite) {
        * Travel the dom upwards until we find <A>-tag with a href, trigger click! 
        * This is needed to catch a correct click when <img> is wrapped inside <a> .. we want the <a>, not <img>
        */
-      while( (element.getAttribute && element.getAttribute("href") == null) || element.tagName != "A" ) {
+      while( (element.getAttribute && element.getAttribute("href") == null) || (element.tagName != "A" && element.tagName != "BUTTON") ) {
         element = element.parentNode
         if(!element) return;
       }
@@ -56,7 +56,7 @@ var unite = (function(unite) {
     *
     */
     dispatch: function(url) {
-      // console.log("Executing " + url);
+      console.log(">> Dispatching route " + url);
       if(!url) url = "/";
 
       var matchresult = that.match(url);
