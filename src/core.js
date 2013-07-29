@@ -55,7 +55,7 @@ var unite = (function(unite) {
     unite.bindings = [];
 
     if(unite.isString(html)) {
-      unite.document = document.implementation.createHTMLDocument();
+      unite.document = document.implementation.createHTMLDocument(""); // IE needs a title-argument here
       unite.document.documentElement.innerHTML = html;
     }
     else {
@@ -146,6 +146,10 @@ var unite = (function(unite) {
             return ret ? ret : match
           }
         });
+        
+        // IE workaround. IE won't add this to the DOM: style="color: {{color}}" cause it's "malformed attribute".
+        // data-style could contain whatever though, so that's our workaround for now.
+        if(attr == "data-style")  element.setAttribute("style", value);
         element.setAttribute(attr, value);
       }
     }
