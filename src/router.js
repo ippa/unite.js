@@ -71,7 +71,7 @@ var unite = (function(unite) {
           fun.call(scope, matchresult.params);
 
           unite.update();
-          if(history) history.pushState({url: url}, window.title, url);
+          if(history && history.pushState) history.pushState({url: url}, window.title, url);
         }
       }
     },
