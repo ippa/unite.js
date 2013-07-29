@@ -56,8 +56,9 @@ var unite = (function(unite) {
     *
     */
     dispatch: function(url) {
+      // url is undefined on first pageload -> use current path as url
+      if(!url) { url = window.location.pathname }
       console.log(">> Dispatching route " + url);
-      if(!url) url = "/";
 
       var matchresult = that.match(url);
       if(matchresult) {
