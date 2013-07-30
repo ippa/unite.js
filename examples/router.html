@@ -6,7 +6,8 @@
         header: "-empty-",
         home: function(params)    { this.header = "Home page" },
         page: function(params)    { this.header = "Found page, params.page = " + params.page },
-        contact: function(params) { this.header = "Matched route /contact" }
+        contact: function(params) { this.header = "Matched route /contact" },
+        displayRoutes: function() { return JSON.stringify(app.routes) }
       }
 
       app.routes = {
@@ -30,6 +31,10 @@
     <a href="/unitejs/examples/router.html">home</a> | 
     <a href="/contact">contact</a> | 
     <a href="/pages/about">about</a>
+
+    <br><br>
+    <h2>app.routes:</h2>
+    <textarea rows=10 cols=40>{{displayRoutes()}}</textarea>
   </body>
 
 </html>
