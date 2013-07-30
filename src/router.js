@@ -24,7 +24,7 @@ var unite = (function(unite) {
       this.regexp_routes = this.createRegexpRoutes(this.routes);
 
       var body = document.getElementsByTagName('body')[0];
-      unite.addEvent(body, "click", this.clickHandler, true);
+      unite.addEvent(body, ["click", "touchend"], this.clickHandler, true);
 
       // Chrome triggers this on pageload, IE doesn't.
       unite.addEvent(window, "popstate", this.popStateHandler, true);
@@ -32,7 +32,10 @@ var unite = (function(unite) {
     
     popStateHandler: function(e) {
       // NOTE: state-object is undefined on first pageload
-      var url = e.state ? e.state.url : "/";
+      // var url = e.state ? e.state.url : window.location.pathname;
+      // alert("popStateHandler")
+      if(!e.state) return;
+      var url = e.state.url
       that.dispatch(url, false);
     },
 
@@ -50,7 +53,6 @@ var unite = (function(unite) {
         var url = element.getAttribute("href");
         that.dispatch(url, true);
       }
-
       e.stopPropagation();
       e.preventDefault();
     },
@@ -61,8 +63,7 @@ var unite = (function(unite) {
     */
     dispatch: function(url, push_state) {
       if(push_state === undefined) push_state = true;
-      // url is undefined on first pageload -> use current path as url
-      // if(!url) { url = window.location.pathname }
+      if(!url) { url = window.location.pathname }
       console.log(">> Dispatching route " + url);
 
       var matchresult = that.match(url);
