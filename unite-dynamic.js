@@ -20,7 +20,7 @@
   var path = scripts[scripts.length-1].src.split('?')[0]
   var root = path.split('/').slice(0, -1).join('/') + '/src/'
 
-  unite = {}
+  unite = {dynamically_loaded: true}
   load(root+"core.js")
   .then(root+"router.js")
   .thenRun(function () {
@@ -31,10 +31,8 @@
      * Instead we have to use the unite.onload-callback when loading the lib through unite-dynamic.js.
      * Here we call it as the very last thing we do after all the components are loaded.
      */
-   
-    addEvent(window, "load", function() {
-      if(unite.onload) { unite.onload() }
-    });
+    unite.init();
+    if(unite.onload) { unite.onload() }
   });
 
 })();

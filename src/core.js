@@ -620,7 +620,3 @@ var unite = (function(unite) {
   return unite;
 })(unite || {});
 
-window.onload = function() {
-  unite.init();
-}
-
