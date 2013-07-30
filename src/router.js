@@ -25,11 +25,15 @@ var unite = (function(unite) {
 
       var body = document.getElementsByTagName('body')[0];
       unite.addEvent(body, "click", this.clickHandler, true);
+
+      // Chrome triggers this on pageload, IE doesn't.
       unite.addEvent(window, "popstate", this.popStateHandler, true);
     },
     
     popStateHandler: function(e) {
-      that.dispatch(event.url);
+      // NOTE: state-object is undefined on first pageload
+      var url = e.state ? e.state.url : "/";
+      that.dispatch(url, false);
     },
 
     clickHandler: function(e) {
@@ -44,7 +48,7 @@ var unite = (function(unite) {
       }
       if(element && element.getAttribute) {
         var url = element.getAttribute("href");
-        that.dispatch(url);
+        that.dispatch(url, true);
       }
 
       e.stopPropagation();
@@ -55,9 +59,10 @@ var unite = (function(unite) {
     * Dispatches an URL - meaning, acts on it.
     *
     */
-    dispatch: function(url) {
+    dispatch: function(url, push_state) {
+      if(push_state === undefined) push_state = true;
       // url is undefined on first pageload -> use current path as url
-      if(!url) { url = window.location.pathname }
+      // if(!url) { url = window.location.pathname }
       console.log(">> Dispatching route " + url);
 
       var matchresult = that.match(url);
@@ -65,13 +70,16 @@ var unite = (function(unite) {
         unite.log(matchresult);
 
         if(matchresult.action) {
+          if(history && history.pushState && push_state) {
+            console.log("pushState " + url);
+            history.pushState({url: url}, window.title, url);
+          }
+
           var scope_function = that.getScopedVariable(matchresult.action);
           var scope = scope_function[0];
           var fun = scope_function[1];
           fun.call(scope, matchresult.params);
-
           unite.update();
-          if(history && history.pushState) history.pushState({url: url}, window.title, url);
         }
       }
     },
