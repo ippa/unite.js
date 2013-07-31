@@ -17,6 +17,7 @@ var unite = (function(unite) {
     routes: [],
     regexp_routes: [],
     variable_regexp: /:([\w]+)/ig,
+    scrolling: false,
 
     init: function(new_routes) {
       that = this;
@@ -24,7 +25,12 @@ var unite = (function(unite) {
       this.regexp_routes = this.createRegexpRoutes(this.routes);
 
       var body = document.getElementsByTagName('body')[0];
-      unite.addEvent(body, ["click", "touchend"], this.clickHandler, true);
+      unite.addEvent(body, ["click"], this.clickHandler, true);
+
+      /* We only fake clicks when there's been no scrolling between touchstart/touchend */
+      unite.addEvent(body, "touchstart", function(e) { that.scrolling = false; }, false );
+      unite.addEvent(body, "touchmove", function(e) { that.scrolling = true;  }, false );
+      unite.addEvent(body, "touchend", this.touchHandler, true);
 
       // Chrome triggers this on pageload, IE doesn't.
       unite.addEvent(window, "popstate", this.popStateHandler, true);
@@ -33,10 +39,14 @@ var unite = (function(unite) {
     popStateHandler: function(e) {
       // NOTE: state-object is undefined on first pageload
       // var url = e.state ? e.state.url : window.location.pathname;
-      // alert("popStateHandler")
       if(!e.state) return;
       var url = e.state.url
       that.dispatch(url, false);
+    },
+
+    touchHandler: function(e) {
+      if(that.scrolling) { /* alert("was scrolling, skip fake-click!"); */ return; };
+      that.clickHandler(e);
     },
 
     clickHandler: function(e) {
