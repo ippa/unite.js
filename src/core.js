@@ -201,6 +201,7 @@ var unite = (function(unite) {
   unite.clone = function(value) {
     if(unite.isArray(value))    return value.slice(0);
     if(unite.isObject(value))   return JSON.parse(JSON.stringify(value));
+    //return JSON.parse(JSON.stringify(value));
     return value;
   }
 
@@ -487,7 +488,7 @@ var unite = (function(unite) {
    */
   function getValue(variable) {
     if(!variable) return undefined;
-    console.log("* getValue(" + variable +")")
+    // console.log("* getValue(" + variable +")")
     var tmp, object, prev;
     
     /* ".." means breakout-value, basically <div scope="app">{{.value}}</div> */
@@ -553,7 +554,8 @@ var unite = (function(unite) {
   unite.log = function() {
     if(!unite.debug) return;
     var s = "";
-    for(var i=0, arg; arg = arguments[i]; i++) {
+    for(var i=0; i < arguments.length; i++) {
+      var arg = arguments[i];
       if(unite.isString(arg))       s += arg;
       else if(unite.isObject(arg))  s += JSON.stringify(arg);
       else                          s += arg.toString();
