@@ -107,10 +107,9 @@ var unite = (function(unite) {
       var scope = getValue(binding.scope + "." + binding.loop);
       loopElement(binding.element, scope, binding);
     }
-    else { 
-      var scope = getValue(binding.scope);
-      applyElement(binding.element, scope, binding);
-    }
+    
+    var scope = getValue(binding.scope);
+    applyElement(binding.element, scope, binding);
   }
 
   function applyElement(element, scope, binding) {
@@ -558,6 +557,7 @@ var unite = (function(unite) {
       var arg = arguments[i];
       if(unite.isString(arg))       s += arg;
       else if(unite.isObject(arg))  s += JSON.stringify(arg);
+      else if(arg === undefined)    s += "undefined"
       else                          s += arg.toString();
     }
     if(console) console.log(s);
