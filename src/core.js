@@ -16,12 +16,11 @@
 var unite = (function(unite) {
 
   /* Private variables */
-  var tag_to_default_event = {
-    "SELECT": "change",
-    "INPUT":  "change",
-    "BUTTON": "click",
-    "DIV":    "click",
-    "A":      "click"
+  var tag_to_default_events = {
+    "SELECT": ["change"],
+    "INPUT":  ["change"],
+    "BUTTON": ["click", "touchend"],
+    "A":      ["click", "touchend"]
   }
 
   /* Public variables / configuration */
@@ -81,23 +80,20 @@ var unite = (function(unite) {
     var tag = binding.element.tagName;
     unite.log("Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
 
+    // Resolve what event we should listen to
+    var events = tag_to_default_events[tag];
+    if(!events) events = ["click"];
+
     // Callback object(el) -> el.srcElement vs el.target
     if(binding.event && binding.loop) {
-      unite.log("event + loop for " + tag)
-        var event_handler = getValue(binding.scope + "." + binding.event);
+      unite.log("event + loop for " + tag);
+      var event_handler = getValue(binding.scope + "." + binding.event);
       var event_handler_with_logic = function(e) { 
         var target = e.target || e.srcElement;
-        console.log("!! Event Handler: " + e);
-
-        // TODO: decide on this.
-        // event_handler(target); 
-        event_handler(e); 
-
+        event_handler(e);  // Default behaivor, call event_handler with event-object
         unite.update(); 
       }
-      var event = tag_to_default_event[tag];
-      if(!event) event = "click";
-      unite.addEvent(binding.element.parentNode, event, event_handler_with_logic);
+      unite.addEvent(binding.element.parentNode, events, event_handler_with_logic);
 
       var scope = getValue(binding.scope + "." + binding.loop);
       loopElement(binding.element, scope, binding);
@@ -105,9 +101,7 @@ var unite = (function(unite) {
     else if(binding.event && !binding.loop) {
       var event_handler = getValue(binding.scope + "." + binding.event);
       var event_handler_with_update = function(e) { event_handler(e); unite.update(); }
-      var event = tag_to_default_event[tag];
-      if(!event) event = "click";
-      unite.addEvent(binding.element, event, event_handler_with_update);
+      unite.addEvent(binding.element, events, event_handler_with_update);
     }
     else if(!binding.event && binding.loop)  { 
       var scope = getValue(binding.scope + "." + binding.loop);
@@ -143,7 +137,7 @@ var unite = (function(unite) {
           if(scope[name] !== undefined) { return scope[name] }
           else {
             var ret = getValue(binding.scope + "." + name);
-            return ret ? ret : match
+            return (ret !== undefined) ? ret : match
           }
         });
         
@@ -168,7 +162,7 @@ var unite = (function(unite) {
           var variable = binding.scope + "." + name;
           unite.log("applyElement(): ", variable, " -> " + getValue(variable));
           var ret = getValue(variable);
-          return ret ? ret : match;
+          return (ret !== undefined) ? ret : match;
         }
       });
     }
@@ -260,6 +254,13 @@ var unite = (function(unite) {
    * General way to add events across browsers
    */
   unite.addEvent = function(obj, type, fn, useCapture) {
+    // If event-type is an array, bind to all events in that array
+    if(unite.isArray(type)) {
+      for(var i=0; i < type.length; i++) unite.addEvent(obj, type[i], fn, useCapture);
+      return;
+    }
+
+    // alert("addEvent " + type + " -> " + fn.toString())
     if(obj.addEventListener) { obj.addEventListener(type, fn, useCapture); }
     else if(obj.attachEvent) {
       obj["e" + type + fn] = fn;
@@ -476,18 +477,24 @@ var unite = (function(unite) {
 
   function getValue(variable, extra_scope) {
     if(!variable) return undefined;
+    // console.log("* getValue(" + variable +")")
     var tmp, object, prev;
     var array = variable.split(".");
 
     object = window[array[0]];
-    for(var i=1; object && i < array.length; i++) {
+    for(var i=1; (object !== undefined) && (i < array.length); i++) {
       prev = object;
       tmp = object[array[i]];
 
       /* If variable name is ending with () AND are functions, execute them and use return value! */
       if(array[i].slice(-2) == "()") {
-        var var2 = array[i].replace("()","")
+        var var2 = array[i].replace("()","");
+        try {
           tmp = object[var2]();
+        }
+        catch(e) {
+          console.log(e)
+        }
         unite.log("EXECUTE FUNCTION: ", array[i]);
       }
       if(i == array.length-1) {
