@@ -25,7 +25,6 @@ var unite = (function(unite) {
       this.regexp_routes = this.createRegexpRoutes(this.routes);
 
       var body = document.getElementsByTagName('body')[0];
-      unite.addEvent(body, ["click"], this.clickHandler, true);
 
       /* We only fake clicks when there's been no scrolling between touchstart/touchend */
       unite.addEvent(body, "touchstart", function(e) { that.scrolling = false; }, false );
@@ -34,6 +33,9 @@ var unite = (function(unite) {
 
       // Chrome triggers this on pageload, IE doesn't.
       unite.addEvent(window, "popstate", this.popStateHandler, true);
+      
+      // Our standard click-event
+      unite.addEvent(body, "click", this.clickHandler, true);
     },
     
     popStateHandler: function(e) {
@@ -46,10 +48,20 @@ var unite = (function(unite) {
 
     touchHandler: function(e) {
       if(that.scrolling) { /* alert("was scrolling, skip fake-click!"); */ return; };
+
+      // Skip click-events for 300ms forward. This makes sure mobile decives doesn't trigger both fake-click And normal click.
+      if(that.skipClick) { /* alert("skipped click!"); */ return; }
       that.clickHandler(e);
+
+      that.skipClick = true;
+      setTimeout(function() {that.skipClick = false}, 300)
     },
 
     clickHandler: function(e) {
+      if(that.skipClick) { /* alert("skipped click!"); */ return; }
+      that.skipClick = true;
+      setTimeout(function() {that.skipClick = false}, 300)
+
       var element = e.target || e.srcElement;
       /*
        * Travel the dom upwards until we find <A>-tag with a href, trigger click! 
