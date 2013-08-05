@@ -73,10 +73,12 @@ var unite = (function(unite) {
       }
       if(element && element.getAttribute) {
         var url = element.getAttribute("href");
+
+        if(url.indexOf("http") == 0) return;
         that.dispatch(url, true);
+        e.stopPropagation();
+        e.preventDefault();
       }
-      e.stopPropagation();
-      e.preventDefault();
     },
 
     /**
@@ -87,6 +89,7 @@ var unite = (function(unite) {
       if(push_state === undefined) push_state = true;
       if(!url) { url = window.location.pathname }
       console.log(">> Dispatching route " + url);
+      console.log(url.indexOf("http"))
 
       var matchresult = that.match(url);
       if(matchresult) {
