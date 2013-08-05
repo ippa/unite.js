@@ -426,7 +426,8 @@ var unite = (function(unite) {
     var path = [];
     var value = element.getAttribute("scope")// || element.getAttribute("loop");
     if(value) {
-      if(value.indexOf("window.") != -1) return undefined;
+      // if(value.indexOf("window.") != -1) return undefined;
+      if(value[0] == ".") return undefined; 
       path = [value]
     }
 
@@ -475,11 +476,27 @@ var unite = (function(unite) {
     return string.match(unite.variable_regexp);
   }
 
-  function getValue(variable, extra_scope) {
+  /**
+   * Takes an string representing a value as argument, ie. "app.home.value" and returns the object.
+   * We do this without using eval but rather looking up the values starting with "window".
+   *  
+   * Notes:
+   * - if the object is a function, execute it and use return value
+   * - if there's ".."-breakout in the string, restart lookup from global window.
+   *
+   */
+  function getValue(variable) {
     if(!variable) return undefined;
-    // console.log("* getValue(" + variable +")")
+    console.log("* getValue(" + variable +")")
     var tmp, object, prev;
-    var array = variable.split(".");
+    
+    /* ".." means breakout-value, basically <div scope="app">{{.value}}</div> */
+    var array = variable.split("..");
+    if(array.length > 1) {
+      variable = array[array.length-1];
+    }
+
+    array = variable.split(".");
 
     object = window[array[0]];
     for(var i=1; (object !== undefined) && (i < array.length); i++) {
