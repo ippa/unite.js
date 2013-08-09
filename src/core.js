@@ -142,8 +142,13 @@ var unite = (function(unite) {
         
         // IE workaround. IE won't add this to the DOM: style="color: {{color}}" cause it's "malformed attribute".
         // data-style could contain whatever though, so that's our workaround for now.
-        if(attr == "data-style")  element.setAttribute("style", value);
-        element.setAttribute(attr, value);
+        if(attr == "data-style")  {
+          element.removeAttribute(attr);
+          element.setAttribute("style", value);
+        }
+        else {
+          element.setAttribute(attr, value);
+        }
       }
     }
   }
