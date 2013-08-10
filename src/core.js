@@ -104,6 +104,10 @@ var unite = (function(unite) {
     applyElement(binding.element, scope, binding);
   }
 
+  /**
+   * Apply bindings to a specific element.
+   * Leans on applyAttributes() and applyText() for the work.
+   */
   function applyElement(element, scope, binding) {
     // Denna får ALLA underelement. så när den körs på <BODY> så gås hela sidan igenom.
     // NOTE: <div loop="persons">{{name}}</div> will return 0 elements
@@ -136,11 +140,9 @@ var unite = (function(unite) {
         // data-style could contain whatever though, so that's our workaround for now.
         if(attr == "data-style")  {
           element.removeAttribute(attr);
-          element.setAttribute("style", value);
+          attr = "style";
         }
-        else {
-          element.setAttribute(attr, value);
-        }
+        element.setAttribute(attr, value);
       }
     }
   }
