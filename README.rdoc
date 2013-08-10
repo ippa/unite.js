@@ -60,4 +60,4 @@ A rule of thumb is that a file named "foo.js" will include a constructor named F
     </body>
   </html>
 
-Run above example here: http://ippa.se/unitejs/examples/list.html
+Run above example here: http://unitejs.org/unitejs/examples/list.html
