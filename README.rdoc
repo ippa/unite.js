@@ -2,7 +2,7 @@
 
 = Unite is pre-pre-alpha. _Everything_ is in flux.
 
-Depends on JavaScript Edition 5. Works with Chrome 9+, Firefox 3.6+, Safari 5+ & IE9.
+Works with Chrome 9+, IE8+ Firefox 3.6+, Safari 5+.
 Licensed under LGPL so you're free to use it for commercial projects.
 
 == Highlights
