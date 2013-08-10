@@ -12,7 +12,7 @@ Licensed under LGPL so you're free to use it for commercial projects.
 
 == Learn more
 * http://unitejs.org/ - Homepage
-* http://unitejs.org/unitejs/test/ - Tests
+* http://unitejs.org/unitejs/test/index.html - Tests
 * http://unitejs.org/unitejs/examples/list.html - Modify a list
 * http://unitejs.org/unitejs/examples/router.html - Simple router example
 
