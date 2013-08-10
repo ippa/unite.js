@@ -8,11 +8,13 @@ Licensed under LGPL so you're free to use it for commercial projects.
 == Highlights
 * Lightweight, under 10k, zero dependencies
 * Work with native JS-objects, less syntax to learn
-* Powerfull scoping let's you organize your code
+* Powerfull scoping lets you organize your code
 
 == Learn more
-* http://ippa.se/unitejs/test/ - Tests
-* http://ippa.se/unitejs/examples/list.html - Modify a list
+* http://unitejs.org/ - Homepage
+* http://unitejs.org/unitejs/test/ - Tests
+* http://unitejs.org/unitejs/examples/list.html - Modify a list
+* http://unitejs.org/unitejs/examples/router.html - Simple router example
 
 == Loading Unite
 * unite.js - includes the whole framework in one easy-to-include file.
