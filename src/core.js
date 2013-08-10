@@ -27,8 +27,13 @@ var unite = (function(unite) {
   unite.variable_regexp = /{{([\w\.\(\)]+)}}/gi;
 
   /* Returns the new HTML with variables/directives fullfilled */
-  unite.render = function() {
-    return unite.document.documentElement.innerHTML;
+  unite.render = function(options) {
+    if(!options) options = {};
+    var string = unite.document.documentElement.innerHTML;
+    if(options.normalize) {
+      string = string.replace(/\;"/, "\"")
+    }
+    return string;
   }
 
   /*
@@ -55,6 +60,8 @@ var unite = (function(unite) {
 
     if(unite.isString(html)) {
       unite.document = document.implementation.createHTMLDocument(""); // IE needs a title-argument here
+
+      // Won't work in <IE10: "Invalid target element for this operation."
       unite.document.documentElement.innerHTML = html;
     }
     else {
@@ -78,7 +85,7 @@ var unite = (function(unite) {
   /* Applies a bindings data to it's elements */
   unite.apply = function(binding) {
     var tag = binding.element.tagName;
-    unite.log("Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
+    unite.log("*** Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
 
     // Resolve what event we should listen to
     var events = tag_to_default_events[tag];
@@ -159,12 +166,12 @@ var unite = (function(unite) {
       var value = binding.content || child.nodeValue;
       child.nodeValue = value.replace(unite.variable_regexp, function(match, name) { 
         if(scope[name] !== undefined) { 
-          unite.log("applyElement(): ", name, " -> ", scope[name]);
+          unite.log("applyText(): ", name, " -> ", scope[name]);
           return scope[name];
         }
         else { 
           var variable = binding.scope + "." + name;
-          unite.log("applyElement(): ", variable, " -> " + getValue(variable));
+          unite.log("applyText(): ", variable, " -> " + getValue(variable));
           var ret = getValue(variable);
           return (ret !== undefined) ? ret : match;
         }
@@ -174,17 +181,20 @@ var unite = (function(unite) {
 
   /* Checks for bindings with dirty data and runs apply() on them */
   unite.applyDirty = function() {
+    unite.log("*** applyDirty()");
     for(var variable in unite.variable_content) {
       if( unite.isDirty(variable, unite.variable_content[variable]) ) {
         var new_value = getValue(variable);
-        unite.log("Variable has changed: ", variable, ": ", unite.variable_content[variable], " -> ", new_value);
+        unite.log("--- Variable has changed: ", variable, ": ", unite.variable_content[variable], " -> ", new_value);
 
         unite.variable_content[variable] = unite.clone(new_value);
 
         var bindings = findBindingsWithVariable(variable);
+        unite.log("Found " + bindings.length + " bindings to apply");
         for(var i=0; i < bindings.length; i++)  unite.apply( bindings[i] );
       }
     }
+    unite.log("*** applyDirty() END");
   }
 
   /* Applies all data to all variables */
@@ -248,7 +258,7 @@ var unite = (function(unite) {
   function findBindingsWithVariable(variable) {
     var list = [];
     for(var i=0; i < unite.bindings.length; i++) {
-      if( indexOf.call(unite.bindings[i].variables, variable) != -1 ) {
+      if( unite.bindings[i].variables.indexOf(variable) != -1) {
         list.push(unite.bindings[i])
       }
     }
@@ -259,6 +269,7 @@ var unite = (function(unite) {
    * General way to add events across browsers
    */
   unite.addEvent = function(obj, type, fn, useCapture) {
+    console.log("AddEvent() " + obj.tagName + " - " + type)
     // If event-type is an array, bind to all events in that array
     if(unite.isArray(type)) {
       for(var i=0; i < type.length; i++) unite.addEvent(obj, type[i], fn, useCapture);
@@ -600,28 +611,23 @@ var unite = (function(unite) {
     return Math.floor(Math.random() * 0x100000000).toString(16) + Math.floor(Math.random() * 0x100000000).toString(16);
   }
 
-  function indexOf(needle) {
-    if(typeof Array.prototype.indexOf === 'function') {
-      indexOf = Array.prototype.indexOf;
-    } 
-    else {
-      indexOf = function(needle) {
-        var i = -1, index;
+  /* 
+   * START POLYFILLS
+   */
+  if(!Array.prototype.indexOf) {
+    Array.prototype.indexOf = function(needle) {
+      var index = -1;
 
-        for(i = 0; i < this.length; i++) {
-          if(this[i] === needle) {
-            index = i;
-            break;
-          }
+      for(var i=0; i < this.length; i++) {
+        if(this[i] === needle) {
+          index = i;
+          break;
         }
-
-        return index;
       }
-    }
-    return indexOf.call(this, needle);
-  };
+      return index;
+    };
+  }
 
-  /* START POLYFILLS */
   /* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind */
   if (!Function.prototype.bind) {
     Function.prototype.bind = function (oThis) {
