@@ -269,7 +269,7 @@ var unite = (function(unite) {
    * General way to add events across browsers
    */
   unite.addEvent = function(obj, type, fn, useCapture) {
-    console.log("AddEvent() " + obj.tagName + " - " + type)
+    unite.log("AddEvent() " + obj.tagName + " - " + type);
     // If event-type is an array, bind to all events in that array
     if(unite.isArray(type)) {
       for(var i=0; i < type.length; i++) unite.addEvent(obj, type[i], fn, useCapture);
