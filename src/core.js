@@ -87,30 +87,15 @@ var unite = (function(unite) {
     var tag = binding.element.tagName;
     unite.log("*** Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
 
-    // Resolve what event we should listen to
-    var events = tag_to_default_events[tag];
-    if(!events) events = ["click"];
-
-    // Callback object(el) -> el.srcElement vs el.target
-    if(binding.event && binding.loop) {
-      unite.log("event + loop for " + tag);
-      var event_handler = getValue(binding.scope + "." + binding.event);
-      var event_handler_with_logic = function(e) { 
-        var target = e.target || e.srcElement;
-        event_handler(e);  // Default behaivor, call event_handler with event-object
-        unite.update(); 
-      }
-      unite.addEvent(binding.element.parentNode, events, event_handler_with_logic);
-
-      var scope = getValue(binding.scope + "." + binding.loop);
-      loopElement(binding.element, scope, binding);
-    }
-    else if(binding.event && !binding.loop) {
+    if(binding.event) {
+      var target = binding.loop ? binding.element.parentNode : binding.element;
+      var events = tag_to_default_events[tag];
+      if(!events) events = ["click"];
       var event_handler = getValue(binding.scope + "." + binding.event);
       var event_handler_with_update = function(e) { event_handler(e); unite.update(); }
-      unite.addEvent(binding.element, events, event_handler_with_update);
+      unite.addEvent(target, events, event_handler_with_update);
     }
-    else if(!binding.event && binding.loop)  { 
+    if(binding.loop)  { 
       var scope = getValue(binding.scope + "." + binding.loop);
       loopElement(binding.element, scope, binding);
     }
