@@ -20,7 +20,7 @@
   var path = scripts[scripts.length-1].src.split('?')[0]
   var root = path.split('/').slice(0, -1).join('/') + '/src/'
 
-  unite = {dynamically_loaded: true}
+  if(typeof(unite) == "undefined")  unite = {dynamically_loaded: true};
   load(root+"core.js")
   .then(root+"router.js")
   .thenRun(function () {

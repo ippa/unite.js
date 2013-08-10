@@ -1,4 +1,4 @@
-/* Built at 2013-07-26 05:48:11 +0200 */
+/* Built at 2013-08-10 04:09:15 +0200 */
 'use strict';
 /*
  *
@@ -10,27 +10,31 @@
  * introduces 3 custom attributes called directives:
  *
  * - scope            <div scope="header"><h1>{{title}}</h1></div>
- * - action           <button action="doSomething">Click me</button>
+ * - event            <button event="doSomething">Click me</button>
  * - loop             <li loop="persons">{{name}}</li>
  *
  */
 var unite = (function(unite) {
 
   /* Private variables */
-  var tag_to_default_event = {
-    "SELECT": "change",
-    "INPUT":  "change",
-    "BUTTON": "click",
-    "DIV":    "click",
-    "A":      "click"
+  var tag_to_default_events = {
+    "SELECT": ["change"],
+    "INPUT":  ["change"],
+    "BUTTON": ["click", "touchend"],
+    "A":      ["click", "touchend"]
   }
 
   /* Public variables / configuration */
   unite.variable_regexp = /{{([\w\.\(\)]+)}}/gi;
 
   /* Returns the new HTML with variables/directives fullfilled */
-  unite.render = function() {
-    return unite.document.documentElement.innerHTML;
+  unite.render = function(options) {
+    if(!options) options = {};
+    var string = unite.document.documentElement.innerHTML;
+    if(options.normalize) {
+      string = string.replace(/\;"/, "\"")
+    }
+    return string;
   }
 
   /*
@@ -45,7 +49,7 @@ var unite = (function(unite) {
    */
   unite.init = function(html, options) {
     if(options === undefined) options = {render: true};
-    
+
     var elements;
     unite.debug = unite.urlParameters()["debug"] == "1";
 
@@ -56,7 +60,9 @@ var unite = (function(unite) {
     unite.bindings = [];
 
     if(unite.isString(html)) {
-      unite.document = document.implementation.createHTMLDocument();
+      unite.document = document.implementation.createHTMLDocument(""); // IE needs a title-argument here
+
+      // Won't work in <IE10: "Invalid target element for this operation."
       unite.document.documentElement.innerHTML = html;
     }
     else {
@@ -80,40 +86,38 @@ var unite = (function(unite) {
   /* Applies a bindings data to it's elements */
   unite.apply = function(binding) {
     var tag = binding.element.tagName;
-    unite.log("Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
+    unite.log("*** Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
+
+    // Resolve what event we should listen to
+    var events = tag_to_default_events[tag];
+    if(!events) events = ["click"];
 
     // Callback object(el) -> el.srcElement vs el.target
-    if(binding.action && binding.loop) {
-      unite.log("action + loop for " + tag)
-      var event_handler = getValue(binding.scope + "." + binding.action);
+    if(binding.event && binding.loop) {
+      unite.log("event + loop for " + tag);
+      var event_handler = getValue(binding.scope + "." + binding.event);
       var event_handler_with_logic = function(e) { 
         var target = e.target || e.srcElement;
-        console.log("!! Event Handler: " + e);
-        event_handler(target); 
+        event_handler(e);  // Default behaivor, call event_handler with event-object
         unite.update(); 
       }
-      var event = tag_to_default_event[tag];
-      if(!event) event = "click";
-      unite.addEvent(binding.element.parentNode, event, event_handler_with_logic);
+      unite.addEvent(binding.element.parentNode, events, event_handler_with_logic);
 
       var scope = getValue(binding.scope + "." + binding.loop);
       loopElement(binding.element, scope, binding);
     }
-    else if(binding.action && !binding.loop) {
-      var event_handler = getValue(binding.scope + "." + binding.action);
-      var event_handler_with_update = function() { event_handler(); unite.update(); }
-      var event = tag_to_default_event[tag];
-      if(!event) event = "click";
-      unite.addEvent(binding.element, event, event_handler_with_update);
+    else if(binding.event && !binding.loop) {
+      var event_handler = getValue(binding.scope + "." + binding.event);
+      var event_handler_with_update = function(e) { event_handler(e); unite.update(); }
+      unite.addEvent(binding.element, events, event_handler_with_update);
     }
-    else if(!binding.action && binding.loop)  { 
+    else if(!binding.event && binding.loop)  { 
       var scope = getValue(binding.scope + "." + binding.loop);
       loopElement(binding.element, scope, binding);
     }
-    else { 
-      var scope = getValue(binding.scope);
-      applyElement(binding.element, scope, binding);
-    }
+    
+    var scope = getValue(binding.scope);
+    applyElement(binding.element, scope, binding);
   }
 
   function applyElement(element, scope, binding) {
@@ -121,7 +125,7 @@ var unite = (function(unite) {
     // NOTE: <div loop="persons">{{name}}</div> will return 0 elements
     var elements = element.querySelectorAll("*");
 
-    unite.log("binding.scope: ", binding.scope, ", elements: ", elements.length, ", content", binding.content)
+    unite.log("binding.scope: ", binding.scope, ", elements: ", elements.length, ", content", binding.content);
     unite.applyAttributes(element, binding.attributes, binding, scope);
     unite.applyText(element, scope, binding);     
 
@@ -140,10 +144,19 @@ var unite = (function(unite) {
           if(scope[name] !== undefined) { return scope[name] }
           else {
             var ret = getValue(binding.scope + "." + name);
-            return ret ? ret : match
+            return (ret !== undefined) ? ret : match
           }
         });
-        element.setAttribute(attr, value);
+        
+        // IE workaround. IE won't add this to the DOM: style="color: {{color}}" cause it's "malformed attribute".
+        // data-style could contain whatever though, so that's our workaround for now.
+        if(attr == "data-style")  {
+          element.removeAttribute(attr);
+          element.setAttribute("style", value);
+        }
+        else {
+          element.setAttribute(attr, value);
+        }
       }
     }
   }
@@ -154,46 +167,46 @@ var unite = (function(unite) {
       var value = binding.content || child.nodeValue;
       child.nodeValue = value.replace(unite.variable_regexp, function(match, name) { 
         if(scope[name] !== undefined) { 
-          unite.log("applyElement(): ", name, " -> ", scope[name]);
+          unite.log("applyText(): ", name, " -> ", scope[name]);
           return scope[name];
         }
         else { 
           var variable = binding.scope + "." + name;
-          unite.log("applyElement(): ", variable, " -> " + getValue(variable));
+          unite.log("applyText(): ", variable, " -> " + getValue(variable));
           var ret = getValue(variable);
-          return ret ? ret : match;
+          return (ret !== undefined) ? ret : match;
         }
       });
     }
   }
 
-  /*
-  unite.lookupValue = function(name, scope, scope2) {
-    if(scope2[name] !== undefined) { 
-      return scope2[name];
-    }
-    else { 
-      var variable = scope + "." + name;
-      var ret = getValue(variable);
-      return ret ? ret : name;
-    }
-  }
-  */
-
   /* Checks for bindings with dirty data and runs apply() on them */
   unite.applyDirty = function() {
+    unite.log("*** applyDirty()");
     for(var variable in unite.variable_content) {
       if( unite.isDirty(variable, unite.variable_content[variable]) ) {
         var new_value = getValue(variable);
-        unite.log("Variable has changed: ", variable, ": ", unite.variable_content[variable], " -> ", new_value);
+        unite.log("--- Variable has changed: ", variable, ": ", unite.variable_content[variable], " -> ", new_value);
 
         unite.variable_content[variable] = unite.clone(new_value);
 
         var bindings = findBindingsWithVariable(variable);
+        unite.log("Found " + bindings.length + " bindings to apply");
         for(var i=0; i < bindings.length; i++)  unite.apply( bindings[i] );
       }
     }
+    unite.log("*** applyDirty() END");
   }
+
+  /* Applies all data to all variables */
+  unite.applyAll = function() {
+    for(var variable in unite.variable_content) {
+      var bindings = findBindingsWithVariable(variable);
+      for(var i=0; i < bindings.length; i++)  unite.apply( bindings[i] );
+    }
+  }
+
+
   /*
    * Clones objects and arrays. Returns argument for other datatypes.
    *
@@ -203,6 +216,7 @@ var unite = (function(unite) {
   unite.clone = function(value) {
     if(unite.isArray(value))    return value.slice(0);
     if(unite.isObject(value))   return JSON.parse(JSON.stringify(value));
+    //return JSON.parse(JSON.stringify(value));
     return value;
   }
 
@@ -225,12 +239,15 @@ var unite = (function(unite) {
     if(!prev_value && !current_value)   return false;
     if(!prev_value && current_value)    return true;
     if(prev_value && !current_value)    return true;
-
     if(unite.isFunction(prev_value) && unite.isFunction(current_value)) { return (prev_value.toString() != current_value.toString()) }
-    else if(prev_value.length !== undefined && current_value.length !== undefined) {
+    
+    if(prev_value.length !== undefined && current_value.length !== undefined) {
       if(prev_value.length != current_value.length) return true;
     }
-    else if(JSON.stringify(prev_value) === JSON.stringify(current_value)) return false;
+    if(JSON.stringify(prev_value) != JSON.stringify(current_value)) {
+      return true;
+    }
+    if(JSON.stringify(prev_value) == JSON.stringify(current_value)) return false;
     else if(prev_value != current_value)     return true;
     return false;
   }
@@ -242,7 +259,7 @@ var unite = (function(unite) {
   function findBindingsWithVariable(variable) {
     var list = [];
     for(var i=0; i < unite.bindings.length; i++) {
-      if( indexOf.call(unite.bindings[i].variables, variable) != -1 ) {
+      if( unite.bindings[i].variables.indexOf(variable) != -1) {
         list.push(unite.bindings[i])
       }
     }
@@ -253,6 +270,14 @@ var unite = (function(unite) {
    * General way to add events across browsers
    */
   unite.addEvent = function(obj, type, fn, useCapture) {
+    unite.log("AddEvent() " + obj.tagName + " - " + type);
+    // If event-type is an array, bind to all events in that array
+    if(unite.isArray(type)) {
+      for(var i=0; i < type.length; i++) unite.addEvent(obj, type[i], fn, useCapture);
+      return;
+    }
+
+    // alert("addEvent " + type + " -> " + fn.toString())
     if(obj.addEventListener) { obj.addEventListener(type, fn, useCapture); }
     else if(obj.attachEvent) {
       obj["e" + type + fn] = fn;
@@ -280,11 +305,11 @@ var unite = (function(unite) {
       if(variables.length > 0) {
         for(var v=0; v < variables.length; v++) { unite.variable_content[ variables[v] ] = ""; }
 
-        var action = element.getAttribute("action");
+        var event = element.getAttribute("event");
         var loop = element.getAttribute("loop");
         var tpl_element = null;
 
-        var entry = {element: element, scope: scope, action: action, attributes: attributes, variables: variables, content: content}
+        var entry = {element: element, scope: scope, event: event, attributes: attributes, variables: variables, content: content}
 
         // Looping element, clone original element (for later further cloning) and hide it.
         if(loop) {
@@ -312,7 +337,7 @@ var unite = (function(unite) {
     var list = [];
     var elements = element.parentNode.querySelectorAll("*");
     for(var i=0; i < elements.length; i++) {
-      if(elements[i]["looped_id"] == loop_id ) list.push(elements[i]);
+      if( elements[i]["looped_id"] == loop_id ) list.push(elements[i]);
     }
     return list;
   }
@@ -324,7 +349,18 @@ var unite = (function(unite) {
     var reuse_counter = 0;
     var new_element, prev_element;
 
-    unite.log(">> loopElement() .. found ", reusable_elements.length, " reusable elements");
+    // console.log(">> loopElement() .. found ", reusable_elements.length, " reusable elements");
+
+    //
+    // TEMP HACK UNTILL WE SORT OUT:
+    // <a loop='images' href="/bilder/{{id}}"><img src="/bilder/{{id}}_size2.jpg" id="{{id}}"/></a>
+    //
+    // ( img src="" doesn't change )
+    //
+    while(reuse_counter < reusable_elements.length) {
+      element.parentNode.removeChild( reusable_elements[reuse_counter] );
+      reuse_counter += 1;
+    }
 
     for(var i=0; scopes && (i < scopes.length); i++) {
       var scope = scopes[i];
@@ -388,12 +424,12 @@ var unite = (function(unite) {
       }
     }
 
-    // Add special attribute-variables like  action="doSomething"
+    // Add special attribute-variables like  event="doSomething"
     for(var i=0; i < element.attributes.length; i++) {
       var name = element.attributes[i].nodeName;
       var value = element.attributes[i].nodeValue;
       if(name == "scope" || name == "loop")   list.push(scope);
-      else if(name == "action")               list.push(scope + "." + value);
+      else if(name == "event")                list.push(scope + "." + value);
     }
 
     return list;
@@ -407,7 +443,8 @@ var unite = (function(unite) {
     var path = [];
     var value = element.getAttribute("scope")// || element.getAttribute("loop");
     if(value) {
-      if(value.indexOf("window.") != -1) return undefined;
+      // if(value.indexOf("window.") != -1) return undefined;
+      if(value[0] == ".") return undefined; 
       path = [value]
     }
 
@@ -456,20 +493,42 @@ var unite = (function(unite) {
     return string.match(unite.variable_regexp);
   }
 
-  function getValue(variable, extra_scope) {
+  /**
+   * Takes an string representing a value as argument, ie. "app.home.value" and returns the object.
+   * We do this without using eval but rather looking up the values starting with "window".
+   *  
+   * Notes:
+   * - if the object is a function, execute it and use return value
+   * - if there's ".."-breakout in the string, restart lookup from global window.
+   *
+   */
+  function getValue(variable) {
     if(!variable) return undefined;
+    // console.log("* getValue(" + variable +")")
     var tmp, object, prev;
-    var array = variable.split(".");
+    
+    /* ".." means breakout-value, basically <div scope="app">{{.value}}</div> */
+    var array = variable.split("..");
+    if(array.length > 1) {
+      variable = array[array.length-1];
+    }
+
+    array = variable.split(".");
 
     object = window[array[0]];
-    for(var i=1; object && i < array.length; i++) {
+    for(var i=1; (object !== undefined) && (i < array.length); i++) {
       prev = object;
       tmp = object[array[i]];
-      
+
       /* If variable name is ending with () AND are functions, execute them and use return value! */
       if(array[i].slice(-2) == "()") {
-        var var2 = array[i].replace("()","")
-        tmp = object[var2]();
+        var var2 = array[i].replace("()","");
+        try {
+          tmp = object[var2]();
+        }
+        catch(e) {
+          console.log(e)
+        }
         unite.log("EXECUTE FUNCTION: ", array[i]);
       }
       if(i == array.length-1) {
@@ -511,9 +570,11 @@ var unite = (function(unite) {
   unite.log = function() {
     if(!unite.debug) return;
     var s = "";
-    for(var i=0, arg; arg = arguments[i]; i++) {
+    for(var i=0; i < arguments.length; i++) {
+      var arg = arguments[i];
       if(unite.isString(arg))       s += arg;
       else if(unite.isObject(arg))  s += JSON.stringify(arg);
+      else if(arg === undefined)    s += "undefined"
       else                          s += arg.toString();
     }
     if(console) console.log(s);
@@ -551,39 +612,58 @@ var unite = (function(unite) {
     return Math.floor(Math.random() * 0x100000000).toString(16) + Math.floor(Math.random() * 0x100000000).toString(16);
   }
 
-  function indexOf(needle) {
-    if(typeof Array.prototype.indexOf === 'function') {
-      indexOf = Array.prototype.indexOf;
-    } 
-    else {
-      indexOf = function(needle) {
-        var i = -1, index;
+  /* 
+   * START POLYFILLS
+   */
+  if(!Array.prototype.indexOf) {
+    Array.prototype.indexOf = function(needle) {
+      var index = -1;
 
-        for(i = 0; i < this.length; i++) {
-          if(this[i] === needle) {
-            index = i;
-            break;
-          }
+      for(var i=0; i < this.length; i++) {
+        if(this[i] === needle) {
+          index = i;
+          break;
         }
-
-        return index;
       }
-    }
-    return indexOf.call(this, needle);
-  };
+      return index;
+    };
+  }
+
+  /* https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/bind */
+  if (!Function.prototype.bind) {
+    Function.prototype.bind = function (oThis) {
+      if (typeof this !== "function") {
+        // closest thing possible to the ECMAScript 5 internal IsCallable function
+        throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
+      }
+
+      var aArgs = Array.prototype.slice.call(arguments, 1), 
+          fToBind = this, 
+          fNOP = function () {},
+          fBound = function () {
+            return fToBind.apply(this instanceof fNOP && oThis
+                ? this
+                : oThis,
+                aArgs.concat(Array.prototype.slice.call(arguments)));
+          };
+
+      fNOP.prototype = this.prototype;
+      fBound.prototype = new fNOP();
+
+      return fBound;
+    };
+  }
+  /* END POLYFILLS */
 
   return unite;
 })(unite || {});
-
-window.onload = function() {
-  unite.init();
-}
 
 'use strict';
 /*
  *
  * unite.js - router
  *
+ * - Add click-listener on body, dispatch all clicks on <A> and <BUTTON> with a href.
  * - Use history.pushState exclusively
  * - Don't bother with old crappy location.hash
  *
@@ -597,6 +677,7 @@ var unite = (function(unite) {
     routes: [],
     regexp_routes: [],
     variable_regexp: /:([\w]+)/ig,
+    scrolling: false,
 
     init: function(new_routes) {
       that = this;
@@ -604,54 +685,91 @@ var unite = (function(unite) {
       this.regexp_routes = this.createRegexpRoutes(this.routes);
 
       var body = document.getElementsByTagName('body')[0];
-      unite.addEvent(body, "click", this.clickHandler, true);
+
+      /* We only fake clicks when there's been no scrolling between touchstart/touchend */
+      unite.addEvent(body, "touchstart", function(e) { that.scrolling = false; }, false );
+      unite.addEvent(body, "touchmove", function(e) { that.scrolling = true;  }, false );
+      unite.addEvent(body, "touchend", this.touchHandler, true);
+
+      // Chrome triggers this on pageload, IE doesn't.
       unite.addEvent(window, "popstate", this.popStateHandler, true);
+      
+      // Our standard click-event
+      unite.addEvent(body, "click", this.clickHandler, true);
     },
     
     popStateHandler: function(e) {
-      // console.log(event);
-      that.dispatch(event.url);
+      // NOTE: state-object is undefined on first pageload
+      // var url = e.state ? e.state.url : window.location.pathname;
+      if(!e.state) return;
+      var url = e.state.url
+      that.dispatch(url, false);
+    },
+
+    touchHandler: function(e) {
+      if(that.scrolling) { /* alert("was scrolling, skip fake-click!"); */ return; };
+
+      // Skip click-events for 300ms forward. This makes sure mobile decives doesn't trigger both fake-click And normal click.
+      if(that.skipClick) { /* alert("skipped click!"); */ return; }
+      that.clickHandler(e);
+
+      that.skipClick = true;
+      setTimeout(function() {that.skipClick = false}, 300)
     },
 
     clickHandler: function(e) {
+      if(that.skipClick) { /* alert("skipped clickHandler!");*/ return; }
+      that.skipClick = true;
+      setTimeout(function() {that.skipClick = false}, 300)
+
       var element = e.target || e.srcElement;
       /*
        * Travel the dom upwards until we find <A>-tag with a href, trigger click! 
        * This is needed to catch a correct click when <img> is wrapped inside <a> .. we want the <a>, not <img>
        */
-      while( (element.getAttribute && element.getAttribute("href") == null) || element.tagName != "A" ) {
+      while( (element.getAttribute && element.getAttribute("href") == null) || (element.tagName != "A" && element.tagName != "BUTTON") ) {
         element = element.parentNode
         if(!element) return;
       }
       if(element && element.getAttribute) {
         var url = element.getAttribute("href");
-        that.dispatch(url);
-      }
 
-      e.stopPropagation();
-      e.preventDefault();
+        // Only intercept non-external links
+        if(url.indexOf("http") != 0) {
+          that.dispatch(url, true);
+
+          // IE
+          e.cancelBubble = true;
+          e.returnValue = false;
+          if(e.stopPropagation) e.stopPropagation();
+          if(e.preventDefault)  e.preventDefault();
+        }
+      }
     },
 
     /**
     * Dispatches an URL - meaning, acts on it.
-    *
     */
-    dispatch: function(url) {
-      // console.log("Executing " + url);
-      if(!url) url = "/";
+    dispatch: function(url, push_state) {
+      if(push_state === undefined) push_state = true;
+      if(!url) { url = window.location.pathname }
+      console.log(">> Dispatching route " + url);
 
       var matchresult = that.match(url);
       if(matchresult) {
         unite.log(matchresult);
 
         if(matchresult.action) {
+          if(history && history.pushState && push_state) {
+            console.log("pushState " + url);
+            history.pushState({url: url}, window.title, url);
+          }
+
           var scope_function = that.getScopedVariable(matchresult.action);
           var scope = scope_function[0];
           var fun = scope_function[1];
           fun.call(scope, matchresult.params);
-
           unite.update();
-          if(history) history.pushState({url: url}, window.title, url);
         }
       }
     },
@@ -722,3 +840,4 @@ var unite = (function(unite) {
   return unite;
 })(unite || {});
 
+;unite.addEvent(window, "load", function() { unite.init(); if(unite.onload) unite.onload(); }, false);
