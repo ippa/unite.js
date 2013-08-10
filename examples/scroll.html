@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <script>
+      app = {
+        items: ["Foo", "Bar", "Moo"],
+        loadItems: function() { for(var i=0; i < 30; i++) { this.items.push("New item") } },
+      }
+    </script>
+
+    <script src="../unite-dynamic.js"></script>
+  </head>
+
+  <body scope="app">
+    <h2>Items, scroll down for more</h2>
+    <div infinite_scroll="loadItems">
+      <div loop="items">{{_human_index}} - {{this}}</div>
+    </div>
+  </body>
+
+</html>

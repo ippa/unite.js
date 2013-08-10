@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <script>
+      app = {
+        items: ["foo","bar"],
+        randomName: function() { return Math.floor(Math.random() * 10) },
+        addItem: function() { this.items.push( this.randomName() ) },
+        delItem: function() { this.items = this.items.slice(0, -1) },
+      }
+    </script>
+
+    <script src="../unite-dynamic.js"></script>
+  </head>
+
+  <body scope="app">
+    <h1>Nested elements in loop test</h1>
+    <button event="addItem">Add item</button>
+    <button event="delItem">Del item</button>
+    <br>
+
+    <h2>Items</h2>
+    <div loop="items" id="{{_index}}"><span class="{{_index}}">{{_index}} - {{this}}</span></div>
+  </body>
+
+</html>

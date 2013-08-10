@@ -1,9 +1,12 @@
-<!DOCTYPE html>
+<html>
   <head>
     <script>
       app = {
         title: "Welcome!",
         titles: {supertitle: "WELCOME #@!"},
+        button_text: "Click me!",
+        showMessage: function() { alert(this.title + " from function.") },
+        checkboxInfo: function(el) { console.log(el.target.checked); },
         items: ["Playstation 4", "SNES", "Megadrive"]
       }
     </script>
@@ -14,6 +17,8 @@
   <body scope="app">
     <div id="test">
       <h1>{{titles.supertitle}}</h1>
+      <button event="showMessage">{{button_text}}</button>
+      <label><input type="checkbox" event="checkboxInfo" checked="{{checked}}" /> Checkbox!</label>
       <ul>
         <li loop="items">{{this}}</li>
       </ul>
