@@ -8,8 +8,6 @@
  * - Don't bother with old crappy location.hash
  *
  */
-var last_click;
-
 var unite = (function(unite) {
   var that = this;
 
@@ -33,16 +31,16 @@ var unite = (function(unite) {
 
       // Chrome triggers this on pageload, IE doesn't.
       unite.addEvent(window, "popstate", this.popStateHandler, true);
-      
+
       // Our standard click-event
       unite.addEvent(body, "click", this.clickHandler, true);
     },
-    
+
     popStateHandler: function(e) {
       // NOTE: state-object is undefined on first pageload
       // var url = e.state ? e.state.url : window.location.pathname;
       if(!e.state) return;
-      var url = e.state.url
+      var url = e.state.url;
       that.dispatch(url, false);
     },
 
@@ -60,7 +58,7 @@ var unite = (function(unite) {
     clickHandler: function(e) {
       if(that.skipClick) { /* alert("skipped clickHandler!");*/ return; }
       that.skipClick = true;
-      setTimeout(function() {that.skipClick = false}, 300)
+      setTimeout(function() {that.skipClick = false}, 300);
 
       var element = e.target || e.srcElement;
       /*
@@ -68,7 +66,7 @@ var unite = (function(unite) {
        * This is needed to catch a correct click when <img> is wrapped inside <a> .. we want the <a>, not <img>
        */
       while( (element.getAttribute && element.getAttribute("href") == null) || (element.tagName != "A" && element.tagName != "BUTTON") ) {
-        element = element.parentNode
+        element = element.parentNode;
         if(!element) return;
       }
       if(element && element.getAttribute) {
@@ -78,9 +76,10 @@ var unite = (function(unite) {
         if(url.indexOf("http") != 0) {
           that.dispatch(url, true);
 
-          // IE
+          // IE .. as usual.
           e.cancelBubble = true;
           e.returnValue = false;
+
           if(e.stopPropagation) e.stopPropagation();
           if(e.preventDefault)  e.preventDefault();
         }
@@ -88,8 +87,8 @@ var unite = (function(unite) {
     },
 
     /**
-    * Dispatches an URL - meaning, acts on it.
-    */
+     * Dispatches an URL - meaning, acts on it.
+     */
     dispatch: function(url, push_state) {
       if(push_state === undefined) push_state = true;
       if(!url) { url = window.location.pathname }
@@ -158,22 +157,21 @@ var unite = (function(unite) {
     },
 
     createRegexpRoutes: function(routes) {
-      var list = []
-        for(var route in this.routes) {
-          var parameters = [];
-          var regexp = route.replace(this.variable_regexp, function(match, name) {
-            parameters.push(name);
-            return "([\\w]+)";
-          });
+      var list = [];
+      for(var route in this.routes) {
+        var parameters = [];
+        var regexp = route.replace(this.variable_regexp, function(match, name) {
+          parameters.push(name);
+          return "([\\w]+)";
+        });
 
-          // We only care to make regexp routes if they contain :parameters
-          if(parameters.length > 0) {
-            regexp = regexp.replace(/\//g, "\\\/");
-            regexp = new RegExp(regexp, "i")
-              var route = {url: route, regexp: regexp, parameters: parameters, action: this.routes[route]}
-            list.push(route);
-          }
+        // We only care to make regexp routes if they contain :parameters
+        if(parameters.length > 0) {
+          regexp = regexp.replace(/\//g, "\\\/");
+          regexp = new RegExp(regexp, "i");
+          list.push( {url: route, regexp: regexp, parameters: parameters, action: this.routes[route]} )
         }
+      }
       return list;
     }
   }
