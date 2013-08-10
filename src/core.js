@@ -173,12 +173,8 @@ var unite = (function(unite) {
       if( unite.isDirty(variable, unite.variable_content[variable]) ) {
         var new_value = getValue(variable);
         unite.log("--- Variable has changed: ", variable, ": ", unite.variable_content[variable], " -> ", new_value);
-
         unite.variable_content[variable] = unite.clone(new_value);
-
-        var bindings = findBindingsWithVariable(variable);
-        unite.log("Found " + bindings.length + " bindings to apply");
-        for(var i=0; i < bindings.length; i++)  unite.apply( bindings[i] );
+        findBindingsWithVariable(variable).forEach( unite.apply );
       }
     }
     unite.log("*** applyDirty() END");
@@ -187,11 +183,9 @@ var unite = (function(unite) {
   /* Applies all data to all variables */
   unite.applyAll = function() {
     for(var variable in unite.variable_content) {
-      var bindings = findBindingsWithVariable(variable);
-      for(var i=0; i < bindings.length; i++)  unite.apply( bindings[i] );
+      findBindingsWithVariable(variable).forEach( unite.apply );
     }
   }
-
 
   /*
    * Clones objects and arrays. Returns argument for other datatypes.
@@ -601,6 +595,17 @@ var unite = (function(unite) {
   /* 
    * START POLYFILLS
    */
+  if(!Array.prototype.forEach) {
+    Array.prototype.forEach = function (fn, scope) {
+      var i, len;
+      for (i = 0, len = this.length; i < len; ++i) {
+        if(i in this) {
+          fn.call(scope, this[i], i, this);
+        }
+      }
+    };
+  }
+
   if(!Array.prototype.indexOf) {
     Array.prototype.indexOf = function(needle) {
       var index = -1;
