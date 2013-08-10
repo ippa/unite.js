@@ -58,7 +58,7 @@ var unite = (function(unite) {
     },
 
     clickHandler: function(e) {
-      if(that.skipClick) { /* alert("skipped click!"); */ return; }
+      if(that.skipClick) { /* alert("skipped clickHandler!");*/ return; }
       that.skipClick = true;
       setTimeout(function() {that.skipClick = false}, 300)
 
@@ -74,22 +74,26 @@ var unite = (function(unite) {
       if(element && element.getAttribute) {
         var url = element.getAttribute("href");
 
-        if(url.indexOf("http") == 0) return;
-        that.dispatch(url, true);
-        e.stopPropagation();
-        e.preventDefault();
+        // Only intercept non-external links
+        if(url.indexOf("http") != 0) {
+          that.dispatch(url, true);
+
+          // IE
+          e.cancelBubble = true;
+          e.returnValue = false;
+          if(e.stopPropagation) e.stopPropagation();
+          if(e.preventDefault)  e.preventDefault();
+        }
       }
     },
 
     /**
     * Dispatches an URL - meaning, acts on it.
-    *
     */
     dispatch: function(url, push_state) {
       if(push_state === undefined) push_state = true;
       if(!url) { url = window.location.pathname }
       console.log(">> Dispatching route " + url);
-      console.log(url.indexOf("http"))
 
       var matchresult = that.match(url);
       if(matchresult) {
