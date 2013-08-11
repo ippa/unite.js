@@ -108,7 +108,7 @@ var unite = (function(unite) {
           var scope = scope_function[0];
           var fun = scope_function[1];
           fun.call(scope, matchresult.params);
-          unite.update();
+          unite.apply();
         }
       }
     },
