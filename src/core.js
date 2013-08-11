@@ -70,7 +70,6 @@ var unite = (function(unite) {
 
     elements = unite.document.querySelectorAll("*");
     unite.bindings = getBindings(elements).reverse();
-    // addEvent(unite.document.uniteody, "mouseup", unite.update);
     if(options.render != false) unite.applyDirty();
     return this;
   }
@@ -78,12 +77,12 @@ var unite = (function(unite) {
   /*
    * Runs when it's possible that a variable has changed.
    */
-  unite.update = function() {
+  unite.apply = function() {
     unite.applyDirty();
   }
 
   /* Applies a bindings data to it's elements */
-  unite.apply = function(binding) {
+  unite.applyBinding = function(binding) {
     var tag = binding.element.tagName;
     unite.log("*** Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
 
@@ -92,7 +91,7 @@ var unite = (function(unite) {
       var events = tag_to_default_events[tag];
       if(!events) events = ["click"];
       var event_handler = getValue(binding.scope + "." + binding.event);
-      var event_handler_with_update = function(e) { event_handler(e); unite.update(); }
+      var event_handler_with_update = function(e) { event_handler(e); unite.apply(); }
       unite.addEvent(target, events, event_handler_with_update);
     }
     if(binding.loop)  { 
@@ -174,7 +173,7 @@ var unite = (function(unite) {
         var new_value = getValue(variable);
         unite.log("--- Variable has changed: ", variable, ": ", unite.variable_content[variable], " -> ", new_value);
         unite.variable_content[variable] = unite.clone(new_value);
-        findBindingsWithVariable(variable).forEach( unite.apply );
+        findBindingsWithVariable(variable).forEach( unite.applyBinding );
       }
     }
     unite.log("*** applyDirty() END");
@@ -183,7 +182,7 @@ var unite = (function(unite) {
   /* Applies all data to all variables */
   unite.applyAll = function() {
     for(var variable in unite.variable_content) {
-      findBindingsWithVariable(variable).forEach( unite.apply );
+      findBindingsWithVariable(variable).forEach( unite.applyBinding );
     }
   }
 
