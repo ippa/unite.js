@@ -284,7 +284,7 @@ var unite = (function(unite) {
    * Creates a list with element, variable-name and value
    */
   function getBindings(elements) {
-    var list = [];
+    var bindings = [];
 
     for(var i=0; i < elements.length; i++) {
       var element = elements[i];
@@ -301,7 +301,7 @@ var unite = (function(unite) {
         var loop = element.getAttribute("loop");
         var tpl_element = null;
 
-        var entry = {element: element, scope: scope, event: event, attributes: attributes, variables: variables, content: content}
+        var binding = {element: element, scope: scope, event: event, attributes: attributes, variables: variables, content: content}
 
         // Looping element, clone original element (for later further cloning) and hide it.
         if(loop) {
@@ -310,15 +310,15 @@ var unite = (function(unite) {
           tpl_element.innerHTML = element.innerHTML; 
           tpl_element["loop_id"] = element["loop_id"];
           tpl_element.removeAttribute("loop"); 
-          entry["tpl_element"] = tpl_element;
-          entry["loop"] = loop;
+          binding["tpl_element"] = tpl_element;
+          binding["loop"] = loop;
 
           element.style.display = "none";
         }
-        list.push(entry);
+        bindings.push(binding);
       }
     }
-    return list;
+    return bindings;
   }
 
   /**
@@ -400,13 +400,13 @@ var unite = (function(unite) {
     // Create array with variables from  text-content
     var content = elementContent(element);
     if(content)   tmp_list2 = content.match(unite.variable_regexp);
-    if(tmp_list2) tmp_list = tmp_list.concat(tmp_list2)
+    if(tmp_list2) tmp_list = tmp_list.concat(tmp_list2);
 
-      // Create array with variables from attribute-values
-      for(var i=0; i < element.attributes.length; i++) {
-        tmp_list2 = element.attributes[i].nodeValue.match(unite.variable_regexp);
-        if(tmp_list2) tmp_list = tmp_list.concat( tmp_list2 );
-      }
+    // Create array with variables from attribute-values
+    for(var i=0; i < element.attributes.length; i++) {
+      tmp_list2 = element.attributes[i].nodeValue.match(unite.variable_regexp);
+      if(tmp_list2) tmp_list = tmp_list.concat( tmp_list2 );
+    }
 
     // Scrub variables from {{ }}-brackets and scope them properly before adding to list
     for(var i=0; i < tmp_list.length; i++) {
@@ -416,7 +416,7 @@ var unite = (function(unite) {
       }
     }
 
-    // Add special attribute-variables like  event="doSomething"
+    // Add special attribute-variables like event="doSomething"
     for(var i=0; i < element.attributes.length; i++) {
       var name = element.attributes[i].nodeName;
       var value = element.attributes[i].nodeValue;
