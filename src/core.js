@@ -77,9 +77,16 @@ var unite = (function(unite) {
   /*
    * Runs when it's possible that a variable has changed.
    */
-  unite.apply = function() {
+  unite.apply = function(arg) {
+    if(unite.isFunction(arg)) { arg() };
     unite.applyDirty();
   }
+
+  unite.bind = function(arg) {
+    if(!unite.isFunction(arg)) throw("unite.bind takes a function as its only argument");
+    return function() { arg(); unite.applyDirty(); }
+  }
+
 
   /* Applies a bindings data to it's elements */
   unite.applyBinding = function(binding) {
