@@ -546,19 +546,10 @@ var unite = (function(unite) {
     return parameters;
   }
 
-  /** A better debug printer. Mostly cause console.log("Important Object: " + obj) => obj.toString() which sucks */
+  /** console.log-wrapper that's easy to mute */
   unite.log = function() {
     if(!unite.debug) return;
-    var s = "";
-    for(var i=0; i < arguments.length; i++) {
-      var arg = arguments[i];
-      if(unite.isString(arg))       s += arg;
-      else if(unite.isObject(arg))  s += JSON.stringify(arg);
-      else if(arg === undefined)    s += "undefined"
-      else                          s += arg.toString();
-    }
-    if(console) console.log(s);
-    else        alert(s);
+    console.log(arguments);
   }
 
   /** Returns true if obj is a String */
