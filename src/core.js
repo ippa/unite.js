@@ -19,8 +19,14 @@ var unite = (function(unite) {
   var tag_to_default_events = {
     "SELECT": ["change"],
     "INPUT":  ["change"],
+    "BUTTON": ["click"],
+    "A":      ["click"]
+
+    /*
+    // TODO: To have both click/touchend we need smarter duplicate detection as in the router!
     "BUTTON": ["click", "touchend"],
     "A":      ["click", "touchend"]
+    */
   }
 
   /* Public variables / configuration */
