@@ -125,7 +125,7 @@ test("Datareplacement and re-render", function() {
   same(unite.init(tpl).render(), out, "loop over array of numbers")
 
   app.list = [3, 4]
-  unite.update();
+  unite.apply();
   out = '<head></head><body scope="app"><div loop="list" style="display: none;">{{this}}</div><div>3</div><div>4</div></body>'
   same(unite.render(), out, "loop over new same-size array of numbers")
 
@@ -135,7 +135,7 @@ test("Datareplacement and re-render", function() {
   same(unite.init(tpl).render(), out, "loop over array of objects")
 
   app.list = [{nr: 3}, {nr: 4}]
-  unite.update();
+  unite.apply();
   out = '<head></head><body scope="app"><div loop="list" style="display: none;">{{nr}}</div><div>3</div><div>4</div></body>'
   same(unite.render(), out, "loop over new same-size array of numbers")
 
@@ -146,7 +146,7 @@ test("Datareplacement and re-render", function() {
   same(unite.init(tpl).render(), out, "loop over array of objects with var-filled html-tag within loop")
 
   app.list = [{nr: 3}, {nr: 4}]
-  unite.update();
+  unite.apply();
   out = '<head></head><body scope="app"><div loop="list" style="display: none;"><span id="{{nr}}"></span></div><div><span id="3"></span></div><div><span id="4"></span></div></body>'
   same(unite.render(), out, "loop over new same-size array of objects with var-filled html-tag within loop")
 
