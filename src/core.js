@@ -19,8 +19,8 @@ var unite = (function(unite) {
   var tag_to_default_events = {
     "SELECT": ["change"],
     "INPUT":  ["change"],
-    "BUTTON": ["click"],
-    "A":      ["click"]
+    "BUTTON": ["click", "touchend"],
+    "A":      ["click", "touchend"]
 
     /*
     // TODO: To have both click/touchend we need smarter duplicate detection as in the router!
@@ -104,7 +104,18 @@ var unite = (function(unite) {
       var events = tag_to_default_events[tag];
       if(!events) events = ["click"];
       var event_handler = getValue(binding.scope + "." + binding.event);
-      var event_handler_with_update = function(e) { event_handler(e); unite.apply(); }
+      var event_handler_with_update = (function() {
+        var handle_next_click = true;
+        return function(e) {
+          if(handle_next_click) {
+            event_handler(e); 
+            unite.apply();
+            handle_next_click = false;
+            setTimeout(function() {handle_next_click = true}, 600)
+          }
+        }
+      })();
+
       unite.addEvent(target, events, event_handler_with_update);
     }
     if(binding.loop)  { 
