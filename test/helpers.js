@@ -1,6 +1,12 @@
 module("helpers");
 QUnit.config.reorder = false;
 
+test("misc", function() {
+  same( unite.urlParameters("/?id=1"), {id: "1"}, "parse out single url-parameter")
+  same( unite.urlParameters("/?id=1&foo=bar"), {id: "1", foo: "bar"}, "parse out two url-parameters")
+  same( unite.urlParameters("http://www.nothing.com/"), {}, "parse out two url-parameters")
+});
+
 test("unite.isDirty", function() {
   a = [1,2];
   same( unite.isDirty("a", [1,2]), false, "arrays with the same content aren't dirty");
