@@ -559,9 +559,13 @@ var unite = (function(unite) {
    *   // Given the current URL is <b>http://test.com/?debug=1&foo=bar</b>
    *   urlParameters() // --> {debug: 1, foo: bar}
    */
-  unite.urlParameters = function() {
+  unite.urlParameters = function(url) {
     var parameters = {}, hash;
-    var hashes = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    if(url===undefined) url = window.location.href;
+
+    var hashes = [];
+    if(url.indexOf('?') > 0) hashes = url.slice(url.indexOf('?') + 1).split('&');
+
     for(var i = 0; i < hashes.length; i++) {
       hash = hashes[i].split('=');
       parameters[hash[0]] = hash[1];
