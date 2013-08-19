@@ -111,7 +111,7 @@ var unite = (function(unite) {
             event_handler(e); 
             unite.apply();
             handle_next_click = false;
-            setTimeout(function() {handle_next_click = true}, 600)
+            setTimeout(function() {handle_next_click = true}, 300)
           }
         }
       })();
