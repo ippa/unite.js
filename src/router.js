@@ -132,9 +132,19 @@ var unite = (function(unite) {
 
     match: function(url) {
       if(!url) return undefined;
+
+      // The parameter-argument we send to the function router matches to.
+      // Includes both classic url-parameters (?foo=bar) and unite router params (/pages/:id)
+      var params = {};
+      
+      // Remove paremeter-string (if it exists) from url before matching route.
+      if(url.indexOf("?") > 0)  {
+        params = unite.urlParameters(url);
+        url = url.substring(0, url.indexOf("?"));
+      }
       /* First try to match simple routes without parameters */ 
       for(var route in this.routes) {
-        if(route == url) return {url: url, action: this.routes[route], params: {}};
+        if(route == url) return {url: url, action: this.routes[route], params: params};
       }
 
       /* ... Then match the more complicated regular expression routes */
@@ -144,8 +154,6 @@ var unite = (function(unite) {
 
         if(values && values.length > 0) {
           values.shift();
-
-          var params = {};
           for(var r=0; r < regexp_route.parameters.length; r++) {
             params[regexp_route.parameters[r]] = values[r]
           }
