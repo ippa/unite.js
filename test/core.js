@@ -152,17 +152,3 @@ test("Datareplacement and re-render", function() {
 
 });
 
-test("Events", function() {
-  /*
-  app = { 
-    clicks: 0,
-    increment_counter: function() { this.clicks += 1; }
-  }
-  tpl = '<head></head><body scope="app"><button id="mainbutton" action="increment_counter"></body>'
-  unite.init(tpl);
-  same(app.clicks, 0, "clicks = 0 to start")
-  */
-
-  //unite.document.getElementById("mainbutton").click();
-  //same(app.clicks, 1, "clicks = 1 after click-event")
-});
