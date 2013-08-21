@@ -99,7 +99,9 @@ var unite = (function(unite) {
     var tag = binding.element.tagName;
     unite.log("*** Apply() " + tag + ": " + binding.scope + " -> " + identifyObject(scope));
 
-    if(binding.event) {
+    if(binding.event && !binding.event_added) {
+      binding.event_added = true;
+
       var target = binding.loop ? binding.element.parentNode : binding.element;
       var events = tag_to_default_events[tag];
       if(!events) events = ["click"];
