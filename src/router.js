@@ -14,7 +14,7 @@ var unite = (function(unite) {
   unite.router = {
     routes: [],
     regexp_routes: [],
-    variable_regexp: /:([^\/]+)/ig,
+    variable_regexp: /:([\w]+)/ig,
     scrolling: false,
 
     init: function(new_routes) {
@@ -151,6 +151,7 @@ var unite = (function(unite) {
       for(var i=0; i < this.regexp_routes.length; i++) {
         var regexp_route = this.regexp_routes[i];
         var values = url.match(regexp_route.regexp);
+        console.log("MEH: ", values);
 
         if(values && values.length > 0) {
           values.shift();
@@ -170,7 +171,8 @@ var unite = (function(unite) {
         var parameters = [];
         var regexp = route.replace(this.variable_regexp, function(match, name) {
           parameters.push(name);
-          return "([\\w]+)";
+          return "([^/]+)";
+          //return "([\\w]+)";
         });
 
         // We only care to make regexp routes if they contain :parameters
