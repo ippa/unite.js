@@ -14,7 +14,7 @@ var unite = (function(unite) {
   unite.router = {
     routes: [],
     regexp_routes: [],
-    variable_regexp: /:([\w]+)/ig,
+    variable_regexp: /:([^\/]+)/ig,
     scrolling: false,
 
     init: function(new_routes) {
