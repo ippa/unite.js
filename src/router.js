@@ -91,7 +91,7 @@ var unite = (function(unite) {
      */
     dispatch: function(url, push_state) {
       if(push_state === undefined) push_state = true;
-      if(!url) { url = window.location.pathname }
+      if(!url) { url = window.location.pathname + window.location.search }
       console.log(">> Dispatching route " + url);
 
       var matchresult = that.match(url);
