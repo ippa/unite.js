@@ -528,13 +528,16 @@ var unite = (function(unite) {
       /* If variable name is ending with () AND are functions, execute them and use return value! */
       if(array[i].slice(-2) == "()") {
         var var2 = array[i].replace("()","");
+        unite.log("EXECUTE FUNCTION: ", array[i]);
         try {
           tmp = object[var2]();
         }
         catch(e) {
-          console.log(e)
+          console.log("!!! Failed to execute '" + var2 + "()' on object: ")
+          console.log(object)
+          console.log("-------")
+          console.log(e.stack)
         }
-        unite.log("EXECUTE FUNCTION: ", array[i]);
       }
       if(i == array.length-1) {
         /* Bind function to parent to get a correct _this_ */
