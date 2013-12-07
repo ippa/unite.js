@@ -110,6 +110,12 @@ test("Loops", function() {
   out = '<head></head><body scope="app"><div loop="list" style="display: none;">{{name}} does {{speciality}}</div><div>ippa does javascript</div><div>harrison does design</div></body>'
   same(unite.init(tpl).render(), out, "looping through objects")
 
+  app = { fnlist: [ {title: "foo", formatTitle: function() { return "Foo" }} ] }
+  tpl = '<head></head><body scope="app"><div loop="fnlist">{{formatTitle()}}</div></body>'
+  out = '<head></head><body scope="app"><div loop="fnlist" style="display: none;">{{formatTitle()}}</div><div>Foo</div></body>'
+  same(unite.init(tpl).render(), out, "loops with function")
+
+
   /*
   app = { list: ["foo", "bar"], "class": "test" }
   tpl = '<head></head><body scope="app"><div loop="list"><span class="{{class}}">{{this}}</span></div></body>'
