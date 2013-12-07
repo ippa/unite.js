@@ -106,7 +106,7 @@ var unite = (function(unite) {
       var events = tag_to_default_events[tag];
       if(!events) events = ["click"];
       var event_handler = getValue(binding.scope + "." + binding.event);
-      var event_handler_with_update = (function() {
+      var event_handler_with_apply = (function() {
         var handle_next_click = true;
         return function(e) {
           if(handle_next_click) {
@@ -118,7 +118,7 @@ var unite = (function(unite) {
         }
       })();
 
-      unite.addEvent(target, events, event_handler_with_update);
+      unite.addEvent(target, events, event_handler_with_apply);
     }
     if(binding.loop)  { 
       var scope = getValue(binding.scope + "." + binding.loop);
