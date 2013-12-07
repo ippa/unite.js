@@ -22,6 +22,7 @@
 
   if(typeof(unite) == "undefined")  unite = {dynamically_loaded: true};
   load(root+"core.js")
+  .then(root+"polyfills.js")
   .then(root+"router.js")
   .thenRun(function () {
     /*

@@ -5,7 +5,7 @@
 #
 File.open("unite.js", "w") do |out|
   out.write("/* Built at #{Time.now.to_s} */\n")
-  files = ["core.js", "router.js"]
+  files = ["polyfills.js", "core.js", "router.js"]
   files.each { |file| out.write( File.read("src/#{file}") ) }
   out.write(";unite.addEvent(window, \"load\", function() { unite.init(); if(unite.onload) unite.onload(); }, false);")
 end
