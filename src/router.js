@@ -14,7 +14,7 @@ var unite = (function(unite) {
   unite.router = {
     routes: [],
     regexp_routes: [],
-    variable_regexp: /:([\wåäöÅÄÖ]+)/ig,
+    variable_regexp: /:([\w]+)/ig,
     scrolling: false,
 
     init: function(new_routes) {
@@ -95,6 +95,8 @@ var unite = (function(unite) {
       console.log(">> Dispatching route " + url);
 
       var matchresult = that.match(url);
+      
+      // console.log(">> Route match " + matchresult[0] + "/" + matchresult[1]);
       if(matchresult) {
         unite.log(matchresult);
 
@@ -104,11 +106,19 @@ var unite = (function(unite) {
             history.pushState({url: url}, window.title, url);
           }
 
-          var scope_function = that.getScopedVariable(matchresult.action);
-          var scope = scope_function[0];
-          var fun = scope_function[1];
-          fun.call(scope, matchresult.params);
-          unite.apply();
+          if(unite.isFunction(matchresult.action)) {
+            // console.log(">> Routeaction is a Function")
+            matchresult.action(matchresult.params);
+            unite.apply();
+          }
+          else {
+            // console.log(">> Routeaction is a String")
+            var scope_function = that.getScopedVariable(matchresult.action);
+            var scope = scope_function[0];
+            var fun = scope_function[1];
+            fun.call(scope, matchresult.params);
+            unite.apply();
+          }
         }
       }
     },
