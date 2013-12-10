@@ -14,7 +14,7 @@ var unite = (function(unite) {
   unite.router = {
     routes: [],
     regexp_routes: [],
-    variable_regexp: /:([\w]+)/ig,
+    variable_regexp: /:([\wåäöÅÄÖ]+)/ig,
     scrolling: false,
 
     init: function(new_routes) {
@@ -151,7 +151,6 @@ var unite = (function(unite) {
       for(var i=0; i < this.regexp_routes.length; i++) {
         var regexp_route = this.regexp_routes[i];
         var values = url.match(regexp_route.regexp);
-        console.log("MEH: ", values);
 
         if(values && values.length > 0) {
           values.shift();
