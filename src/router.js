@@ -16,6 +16,7 @@ var unite = (function(unite) {
     regexp_routes: [],
     variable_regexp: /:([\w]+)/ig,
     scrolling: false,
+    auto_apply: true,
 
     init: function(new_routes) {
       that = this;
@@ -109,7 +110,7 @@ var unite = (function(unite) {
           if(unite.isFunction(matchresult.action)) {
             // console.log(">> Routeaction is a Function")
             matchresult.action(matchresult.params);
-            unite.apply();
+            if(that.auto_apply) unite.apply();
           }
           else {
             // console.log(">> Routeaction is a String")
@@ -117,7 +118,7 @@ var unite = (function(unite) {
             var scope = scope_function[0];
             var fun = scope_function[1];
             fun.call(scope, matchresult.params);
-            unite.apply();
+            if(that.auto_apply) unite.apply();
           }
         }
       }
