@@ -1,4 +1,4 @@
-= Unite.js - lightweight 2-way hierarchical databinding 
+= Unite.js - lightweight 2-way hierarchical databinding
 
 = Unite is pre-pre-alpha. _Everything_ is in flux.
 
@@ -11,10 +11,10 @@ Licensed under LGPL so you're free to use it for commercial projects.
 * Powerfull scoping lets you organize your code
 
 == Learn more
-* http://unitejs.org/ - Homepage
-* http://unitejs.org/unitejs/test/index.html - Tests
-* http://unitejs.org/unitejs/examples/list.html - Modify a list
-* http://unitejs.org/unitejs/examples/router.html - Simple router example
+* https://unitejs.ippa.se/ - Homepage
+* https://unitejs.ippa.se/unitejs/test/index.html - Tests
+* https://unitejs.ippa.se/unitejs/examples/list.html - Modify a list
+* https://unitejs.ippa.se/unitejs/examples/router.html - Simple router example
 
 == Loading Unite
 * unite.js - includes the whole framework in one easy-to-include file.
@@ -60,4 +60,4 @@ A rule of thumb is that a file named "foo.js" will include a constructor named F
     </body>
   </html>
 
-Run above example here: http://unitejs.org/unitejs/examples/list.html
+Run above example here: https://unitejs.ippa.se//unitejs/examples/list.html
